@@ -13,7 +13,7 @@ import cc.factorie.variable.{HammingObjective, BinaryFeatureVectorVariable, Cate
  * Date: 7/15/13
  * Time: 2:55 PM
  */
-class  ChainPosTagger extends DocumentAnnotator {
+class  ChainPosTagger[A <: CategoricalDomain[String], B <: CategoricalVariable](PosDomain: A, PosTag: B) extends DocumentAnnotator {
   def this(url:java.net.URL) = { this(); deserialize(url.openConnection().getInputStream) }
   def process(document: Document) = {
     document.sentences.foreach(s => {
