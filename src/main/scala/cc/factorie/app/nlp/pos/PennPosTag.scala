@@ -79,19 +79,21 @@ object PennPosDomain extends CategoricalDomain[String] {
   def isVerb(pos:String) = pos(0) == 'V'
   def isAdjective(pos:String) = pos(0) == 'J'
   def isPersonalPronoun(pos: String) = pos == "PRP"
+
+  /** A categorical variable, associated with a token, holding its Penn Treebank part-of-speech category.  */
+  class PennPosTag(val token:Token, initialValue:String) extends CategoricalVariable(initialValue) {
+    def domain = PennPosDomain
+    def isNoun = PennPosDomain.isNoun(categoryValue)
+    def isProperNoun = PennPosDomain.isProperNoun(categoryValue)
+    def isVerb = PennPosDomain.isVerb(categoryValue)
+    def isAdjective = PennPosDomain.isAdjective(categoryValue)
+    def isPersonalPronoun = PennPosDomain.isPersonalPronoun(categoryValue)
+  }
+
+  /** A categorical variable, associated with a token, holding its Penn Treebank part-of-speech category,
+      which also separately holds its desired correct "target" value.  */
+  class LabeledPennPosTag(token:Token, targetValue:String) extends PennPosTag(token, targetValue) with CategoricalLabeling[String]
 }
-/** A categorical variable, associated with a token, holding its Penn Treebank part-of-speech category.  */
-class PennPosTag(val token:Token, initialValue:String) extends CategoricalVariable(initialValue) {
-  def domain = PennPosDomain
-  def isNoun = PennPosDomain.isNoun(categoryValue)
-  def isProperNoun = PennPosDomain.isProperNoun(categoryValue)
-  def isVerb = PennPosDomain.isVerb(categoryValue)
-  def isAdjective = PennPosDomain.isAdjective(categoryValue)
-  def isPersonalPronoun = PennPosDomain.isPersonalPronoun(categoryValue)
-}
-/** A categorical variable, associated with a token, holding its Penn Treebank part-of-speech category,
-    which also separately holds its desired correct "target" value.  */
-class LabeledPennPosTag(token:Token, targetValue:String) extends PennPosTag(token, targetValue) with CategoricalLabeling[String]
 
 
 /** The "A Universal Part-of-Speech Tagset"

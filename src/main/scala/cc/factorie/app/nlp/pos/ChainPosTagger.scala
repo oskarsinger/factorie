@@ -13,12 +13,12 @@ import cc.factorie.variable.{HammingObjective, BinaryFeatureVectorVariable, Cate
  * Date: 7/15/13
  * Time: 2:55 PM
  */
-class  ChainPosTagger[A <: CategoricalDomain[String], B <: CategoricalVariable](PosDomain: A, PosTag, B) extends DocumentAnnotator {
+class  ChainPosTagger[A <: CategoricalDomain[String]](PosDomain: A) extends DocumentAnnotator {
   def this(url:java.net.URL) = { this(); deserialize(url.openConnection().getInputStream) }
   def process(document: Document) = {
     document.sentences.foreach(s => {
       if (s.nonEmpty) {
-        s.tokens.foreach(t => if (!t.attr.contains[PennPosTag]) t.attr += new PennPosTag(t, "NN"))
+        s.tokens.foreach(t => if (!t.attr.contains[PosDomain.PosTag]) t.attr += new PosDomain.PosTag(t, "NN"))
         initPOSFeatures(s)
         model.maximize(s.tokens.map(_.posTag))(null)
       }
@@ -27,8 +27,8 @@ class  ChainPosTagger[A <: CategoricalDomain[String], B <: CategoricalVariable](
   }
 
   def prereqAttrs = Seq(classOf[Token], classOf[Sentence])
-  def postAttrs = Seq(classOf[PennPosTag])
-  def tokenAnnotationString(token: Token) = { val label = token.attr[PennPosTag]; if (label ne null) label.categoryValue else "(null)" }
+  def postAttrs = Seq(classOf[PosDomain.PosTag])
+  def tokenAnnotationString(token: Token) = { val label = token.attr[PosDomain.PosTag]; if (label ne null) label.categoryValue else "(null)" }
 
   def serialize(stream: OutputStream) {
     import cc.factorie.util.CubbieConversions._
@@ -51,15 +51,15 @@ class  ChainPosTagger[A <: CategoricalDomain[String], B <: CategoricalVariable](
     PosFeaturesDomain.freeze()
     testSentences.foreach(initPOSFeatures)
     def evaluate() {
-      (trainSentences ++ testSentences).foreach(s => model.maximize(s.tokens.map(_.attr[LabeledPennPosTag]))(null))
-      println("Train accuracy: "+ HammingObjective.accuracy(trainSentences.flatMap(s => s.tokens.map(_.attr[LabeledPennPosTag]))))
-      println("Test accuracy: "+ HammingObjective.accuracy(testSentences.flatMap(s => s.tokens.map(_.attr[LabeledPennPosTag]))))
+      (trainSentences ++ testSentences).foreach(s => model.maximize(s.tokens.map(_.attr[PosDomain.LabeledPosTag]))(null))
+      println("Train accuracy: "+ HammingObjective.accuracy(trainSentences.flatMap(s => s.tokens.map(_.attr[PosDomain.LabeledPosTag]))))
+      println("Test accuracy: "+ HammingObjective.accuracy(testSentences.flatMap(s => s.tokens.map(_.attr[PosDomain.LabeledPosTag]))))
     }
     val examples =
     if(useHingeLoss)
-      trainSentences.map(sentence => new model.ChainStructuredSVMExample(sentence.tokens.map(_.attr[LabeledPennPosTag]))).toSeq
+      trainSentences.map(sentence => new model.ChainStructuredSVMExample(sentence.tokens.map(_.attr[PosDomain.LabeledPosTag]))).toSeq
     else
-      trainSentences.map(sentence => new model.ChainLikelihoodExample(sentence.tokens.map(_.attr[LabeledPennPosTag])))
+      trainSentences.map(sentence => new model.ChainLikelihoodExample(sentence.tokens.map(_.attr[PosDomain.LabeledPosTag])))
     //val optimizer = new cc.factorie.optimize.AdaGrad(rate=lrate)
     val optimizer = new cc.factorie.optimize.AdaGradRDA(rate=lrate, l1=l1Factor/examples.length, l2=l2Factor/examples.length)
     Trainer.onlineTrain(model.parameters, examples, maxIterations=numIterations, optimizer=optimizer, evaluate=evaluate, useParallelTrainer = false)
@@ -70,11 +70,11 @@ class  ChainPosTagger[A <: CategoricalDomain[String], B <: CategoricalVariable](
   class PosFeatures(val token:Token) extends BinaryFeatureVectorVariable[String] { def domain = PosFeaturesDomain; override def skipNonCategories = true }
 
 
-  val model = new ChainModel[PennPosTag, PosFeatures, Token](PennPosDomain,
+  val model = new ChainModel[PosDomain.PosTag, PosFeatures, Token](PosDomain,
     PosFeaturesDomain,
     l => l.token.attr[PosFeatures],
     l => l.token,
-    t => t.attr[PennPosTag]){
+    t => t.attr[PosDomain.PosTag]){
     useObsMarkov = false
   }
 
