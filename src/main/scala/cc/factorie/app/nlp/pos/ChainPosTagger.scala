@@ -6,19 +6,19 @@ import cc.factorie.app.chain.Observations._
 import java.io._
 import cc.factorie.util.{HyperparameterMain, ClasspathURL, BinarySerializer}
 import cc.factorie.optimize.Trainer
-import cc.factorie.variable.{HammingObjective, BinaryFeatureVectorVariable, CategoricalVectorDomain}
+import cc.factorie.variable.{HammingObjective, BinaryFeatureVectorVariable, CategoricalVectorDomain, CategoricalDomain}
 
 /**
  * User: apassos
  * Date: 7/15/13
  * Time: 2:55 PM
  */
-class  ChainPosTagger[A <: CategoricalDomain[String]](PosDomain: A) extends DocumentAnnotator {
-  def this(url:java.net.URL) = { this(); deserialize(url.openConnection().getInputStream) }
+class  ChainPosTagger[A <: CategoricalDomain[String]](posDomain: A = PennPosDomain) extends DocumentAnnotator {
+  def this[A <: CategoricalDomain[String]](posDomain: A, url: java.net.URL) = { this(); deserialize(url.openConnection().getInputStream) }
   def process(document: Document) = {
     document.sentences.foreach(s => {
       if (s.nonEmpty) {
-        s.tokens.foreach(t => if (!t.attr.contains[PosDomain.PosTag]) t.attr += new PosDomain.PosTag(t, "NN"))
+        s.tokens.foreach(t => if (!t.attr.contains[posDomain.Tag]) t.attr += new posDomain.Tag(t, "NN"))
         initPOSFeatures(s)
         model.maximize(s.tokens.map(_.posTag))(null)
       }
@@ -27,8 +27,8 @@ class  ChainPosTagger[A <: CategoricalDomain[String]](PosDomain: A) extends Docu
   }
 
   def prereqAttrs = Seq(classOf[Token], classOf[Sentence])
-  def postAttrs = Seq(classOf[PosDomain.PosTag])
-  def tokenAnnotationString(token: Token) = { val label = token.attr[PosDomain.PosTag]; if (label ne null) label.categoryValue else "(null)" }
+  def postAttrs = Seq(classOf[posDomain.Tag])
+  def tokenAnnotationString(token: Token) = { val label = token.attr[posDomain.Tag]; if (label ne null) label.categoryValue else "(null)" }
 
   def serialize(stream: OutputStream) {
     import cc.factorie.util.CubbieConversions._
@@ -51,15 +51,15 @@ class  ChainPosTagger[A <: CategoricalDomain[String]](PosDomain: A) extends Docu
     PosFeaturesDomain.freeze()
     testSentences.foreach(initPOSFeatures)
     def evaluate() {
-      (trainSentences ++ testSentences).foreach(s => model.maximize(s.tokens.map(_.attr[PosDomain.LabeledPosTag]))(null))
-      println("Train accuracy: "+ HammingObjective.accuracy(trainSentences.flatMap(s => s.tokens.map(_.attr[PosDomain.LabeledPosTag]))))
-      println("Test accuracy: "+ HammingObjective.accuracy(testSentences.flatMap(s => s.tokens.map(_.attr[PosDomain.LabeledPosTag]))))
+      (trainSentences ++ testSentences).foreach(s => model.maximize(s.tokens.map(_.attr[posDomain.LabeledTag]))(null))
+      println("Train accuracy: "+ HammingObjective.accuracy(trainSentences.flatMap(s => s.tokens.map(_.attr[posDomain.LabeledTag]))))
+      println("Test accuracy: "+ HammingObjective.accuracy(testSentences.flatMap(s => s.tokens.map(_.attr[posDomain.LabeledTag]))))
     }
     val examples =
     if(useHingeLoss)
-      trainSentences.map(sentence => new model.ChainStructuredSVMExample(sentence.tokens.map(_.attr[PosDomain.LabeledPosTag]))).toSeq
+      trainSentences.map(sentence => new model.ChainStructuredSVMExample(sentence.tokens.map(_.attr[posDomain.LabeledTag]))).toSeq
     else
-      trainSentences.map(sentence => new model.ChainLikelihoodExample(sentence.tokens.map(_.attr[PosDomain.LabeledPosTag])))
+      trainSentences.map(sentence => new model.ChainLikelihoodExample(sentence.tokens.map(_.attr[posDomain.LabeledTag])))
     //val optimizer = new cc.factorie.optimize.AdaGrad(rate=lrate)
     val optimizer = new cc.factorie.optimize.AdaGradRDA(rate=lrate, l1=l1Factor/examples.length, l2=l2Factor/examples.length)
     Trainer.onlineTrain(model.parameters, examples, maxIterations=numIterations, optimizer=optimizer, evaluate=evaluate, useParallelTrainer = false)
@@ -70,11 +70,11 @@ class  ChainPosTagger[A <: CategoricalDomain[String]](PosDomain: A) extends Docu
   class PosFeatures(val token:Token) extends BinaryFeatureVectorVariable[String] { def domain = PosFeaturesDomain; override def skipNonCategories = true }
 
 
-  val model = new ChainModel[PosDomain.PosTag, PosFeatures, Token](PosDomain,
+  val model = new ChainModel[posDomain.Tag, PosFeatures, Token](posDomain,
     PosFeaturesDomain,
     l => l.token.attr[PosFeatures],
     l => l.token,
-    t => t.attr[PosDomain.PosTag]){
+    t => t.attr[posDomain.Tag]){
     useObsMarkov = false
   }
 
@@ -108,11 +108,11 @@ class  ChainPosTagger[A <: CategoricalDomain[String]](PosDomain: A) extends Docu
   }
 }
 
-class WSJChainPosTagger(url:java.net.URL) extends ChainPosTagger(url)
-object WSJChainPosTagger extends WSJChainPosTagger(ClasspathURL[WSJChainPosTagger](".factorie"))
+class WSJChainPosTagger[A <: CategoricalDomain[String]](posDomain: A, url: java.net.URL) extends ChainPosTagger(url)
+object WSJChainPosTagger extends WSJChainPosTagger(PennPosDomain, ClasspathURL[WSJChainPosTagger](".factorie"))
 
-class OntonotesChainPosTagger(url:java.net.URL) extends ChainPosTagger(url)
-object OntonotesChainPosTagger extends OntonotesChainPosTagger(ClasspathURL[OntonotesChainPosTagger](".factorie"))
+class OntonotesChainPosTagger[A <: CategoricalDomain[String]](posDomain: A, url: java.net.URL) extends ChainPosTagger(url)
+object OntonotesChainPosTagger extends OntonotesChainPosTagger(PennPosDomain, ClasspathURL[OntonotesChainPosTagger](".factorie"))
 
 
 object ChainPosTrainer extends HyperparameterMain {
@@ -147,7 +147,7 @@ object ChainPosTrainer extends HyperparameterMain {
       val pos2 = new ChainPosTagger
       pos2.deserialize(new FileInputStream(new java.io.File(opts.modelFile.value)))
     }
-    val acc = HammingObjective.accuracy(testDocs.flatMap(d => d.sentences.flatMap(s => s.tokens.map(_.attr[LabeledPennPosTag]))))
+    val acc = HammingObjective.accuracy(testDocs.flatMap(d => d.sentences.flatMap(s => s.tokens.map(_.attr[posDomain.LabeledTag]))))
     if(opts.targetAccuracy.wasInvoked) cc.factorie.assertMinimalAccuracy(acc,opts.targetAccuracy.value.toDouble)
 
     acc

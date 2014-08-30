@@ -81,7 +81,7 @@ object PennPosDomain extends CategoricalDomain[String] {
   def isPersonalPronoun(pos: String) = pos == "PRP"
 
   /** A categorical variable, associated with a token, holding its Penn Treebank part-of-speech category.  */
-  class PennPosTag(val token:Token, initialValue:String) extends CategoricalVariable(initialValue) {
+  class Tag(val token:Token, initialValue:String) extends CategoricalVariable(initialValue) {
     def domain = PennPosDomain
     def isNoun = PennPosDomain.isNoun(categoryValue)
     def isProperNoun = PennPosDomain.isProperNoun(categoryValue)
@@ -92,9 +92,8 @@ object PennPosDomain extends CategoricalDomain[String] {
 
   /** A categorical variable, associated with a token, holding its Penn Treebank part-of-speech category,
       which also separately holds its desired correct "target" value.  */
-  class LabeledPennPosTag(token:Token, targetValue:String) extends PennPosTag(token, targetValue) with CategoricalLabeling[String]
+  class LabeledTag(token:Token, targetValue:String) extends PennPosTag(token, targetValue) with CategoricalLabeling[String]
 }
-
 
 /** The "A Universal Part-of-Speech Tagset"
     by Slav Petrov, Dipanjan Das and Ryan McDonald

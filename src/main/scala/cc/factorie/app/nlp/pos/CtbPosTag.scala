@@ -13,6 +13,7 @@
    limitations under the License. */
 
 package cc.factorie.app.nlp.pos
+
 import cc.factorie._
 import cc.factorie.app.nlp._
 import cc.factorie.variable._
@@ -64,15 +65,16 @@ object CtbPosDomain extends CategoricalDomain[String] {
   def isPersonalPronoun(pos: String): Boolean = pos == "PRP"
 
   /** A categorical variable, associated with a token, holding its Penn Treebank part-of-speech category.  */
-  class CtbPosTag(val token:Token, initialValue:String) extends CategoricalVariable(initialValue) {
+  class Tag(val token:Token, initialValue:String) extends CategoricalVariable(initialValue) {
     def domain = CtbPosDomain
-    def isNoun = this.domain.isNoun(categoryValue)
-    def isProperNoun = this.domain.isProperNoun(categoryValue)
-    def isVerb = this.domain.isVerb(categoryValue)
-    def isAdjective = this.domain.isAdjective(categoryValue)
-    def isPersonalPronoun = this.domain.isPersonalPronoun(categoryValue)
+    def isNoun = domain.isNoun(categoryValue)
+    def isProperNoun = domain.isProperNoun(categoryValue)
+    def isVerb = domain.isVerb(categoryValue)
+    def isAdjective = domain.isAdjective(categoryValue)
+    def isPersonalPronoun = domain.isPersonalPronoun(categoryValue)
   }
+
   /** A categorical variable, associated with a token, holding its Penn Treebank part-of-speech category,
       which also separately holds its desired correct "target" value.  */
-  class LabeledCtbPosTag(token: Token, targetValue: String) extends CtbPosTag(token, targetValue) with CategoricalLabeling[String]
+  class LabeledTag(token: Token, targetValue: String) extends CtbPosTag(token, targetValue) with CategoricalLabeling[String]
 }
