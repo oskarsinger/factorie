@@ -13,8 +13,8 @@ import cc.factorie.variable.{HammingObjective, BinaryFeatureVectorVariable, Cate
  * Date: 7/15/13
  * Time: 2:55 PM
  */
-class  ChainPosTagger[A <: CategoricalDomain[String]](posDomain: A = PennPosDomain) extends DocumentAnnotator {
-  def this[A <: CategoricalDomain[String]](posDomain: A, url: java.net.URL) = { this(); deserialize(url.openConnection().getInputStream) }
+class ChainPosTagger[A <: PosDomain](val posDomain: A) extends DocumentAnnotator {
+  def this(posDomain: A, url: java.net.URL) = { this(posDomain); deserialize(url.openConnection().getInputStream) }
   def process(document: Document) = {
     document.sentences.foreach(s => {
       if (s.nonEmpty) {
@@ -108,11 +108,11 @@ class  ChainPosTagger[A <: CategoricalDomain[String]](posDomain: A = PennPosDoma
   }
 }
 
-class WSJChainPosTagger[A <: CategoricalDomain[String]](posDomain: A, url: java.net.URL) extends ChainPosTagger(url)
-object WSJChainPosTagger extends WSJChainPosTagger(PennPosDomain, ClasspathURL[WSJChainPosTagger](".factorie"))
+class WSJChainPosTagger(url: java.net.URL) extends ChainPosTagger(PennPosDomain, url)
+object WSJChainPosTagger extends WSJChainPosTagger(ClasspathURL[WSJChainPosTagger](".factorie"))
 
-class OntonotesChainPosTagger[A <: CategoricalDomain[String]](posDomain: A, url: java.net.URL) extends ChainPosTagger(url)
-object OntonotesChainPosTagger extends OntonotesChainPosTagger(PennPosDomain, ClasspathURL[OntonotesChainPosTagger](".factorie"))
+class OntonotesChainPosTagger(url: java.net.URL) extends ChainPosTagger(PennPosDomain, url)
+object OntonotesChainPosTagger extends OntonotesChainPosTagger(ClasspathURL[OntonotesChainPosTagger](".factorie"))
 
 
 object ChainPosTrainer extends HyperparameterMain {
@@ -123,7 +123,7 @@ object ChainPosTrainer extends HyperparameterMain {
     assert(opts.trainFile.wasInvoked)
     // Expects three command-line arguments: a train file, a test file, and a place to save the model in
     // the train and test files are supposed to be in OWPL format
-    val pos = new ChainPosTagger
+    val pos = new ChainPosTagger(PennPosDomain)
 
     val trainDocs = load.LoadOntonotes5.fromFilename(opts.trainFile.value)
     val testDocs =  load.LoadOntonotes5.fromFilename(opts.testFile.value)
@@ -144,7 +144,7 @@ object ChainPosTrainer extends HyperparameterMain {
               opts.rate.value, opts.delta.value, opts.cutoff.value, opts.updateExamples.value, opts.useHingeLoss.value, l1Factor=opts.l1.value, l2Factor=opts.l2.value)
     if (opts.saveModel.value) {
       pos.serialize(new FileOutputStream(new File(opts.modelFile.value)))
-      val pos2 = new ChainPosTagger
+      val pos2 = new ChainPosTagger(PennPosDomain)
       pos2.deserialize(new FileInputStream(new java.io.File(opts.modelFile.value)))
     }
     val acc = HammingObjective.accuracy(testDocs.flatMap(d => d.sentences.flatMap(s => s.tokens.map(_.attr[posDomain.LabeledTag]))))

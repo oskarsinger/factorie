@@ -10,7 +10,7 @@ import cc.factorie.app.chain.ChainModel
 import cc.factorie.app.chain.Observations._
 import scala.io.Source
 import cc.factorie.app.nlp.load._
-import cc.factorie.app.nlp.pos.PennPosTag
+import cc.factorie.app.nlp.pos.PennPosDomain
 
 
 /**
@@ -37,7 +37,7 @@ class ChainChunker[L<:ChunkTag](chunkDomain: CategoricalDomain[String], newChunk
     })
     document
   }
-  def prereqAttrs = Seq(classOf[Token], classOf[Sentence],classOf[PennPosTag])
+  def prereqAttrs = Seq(classOf[Token], classOf[Sentence],classOf[PennPosDomain.Tag])
   def postAttrs = Seq(m.runtimeClass)
   def tokenAnnotationString(token: Token) = { val label = token.attr[L]; if (label ne null) label.categoryValue else "(null)" }
 
@@ -97,7 +97,7 @@ class ChainChunker[L<:ChunkTag](chunkDomain: CategoricalDomain[String], newChunk
         token.attr.remove[ChunkFeatures]
       val features = token.attr += new ChunkFeatures(token)
       val rawWord = token.string
-      val posTag = token.attr[PennPosTag]
+      val posTag = token.attr[PennPosDomain.Tag]
       features += "SENTLOC="+i
       features += "P="+posTag
       features += "Raw="+rawWord
@@ -140,7 +140,7 @@ object NestedChainChunker extends ChainChunker[BILOUNestedChunkTag](BILOUNestedC
 object ChainChunkerTrainer extends HyperparameterMain {
   def generateErrorOutput(sentence: Sentence): String ={
     val sb = new StringBuffer
-    sentence.tokens.map{t=>sb.append("%s %20s %10s %10s  %s\n".format(if (t.attr.all[ChunkTag].head.valueIsTarget) " " else "*", t.string, t.attr[PennPosTag], t.attr.all[ChunkTag].head.target.categoryValue, t.attr.all[ChunkTag].head.categoryValue))}.mkString("\n")
+    sentence.tokens.map{t=>sb.append("%s %20s %10s %10s  %s\n".format(if (t.attr.all[ChunkTag].head.valueIsTarget) " " else "*", t.string, t.attr[PennPosDomain.Tag], t.attr.all[ChunkTag].head.target.categoryValue, t.attr.all[ChunkTag].head.categoryValue))}.mkString("\n")
   }
 
   def evaluateParameters(args: Array[String]): Double = {

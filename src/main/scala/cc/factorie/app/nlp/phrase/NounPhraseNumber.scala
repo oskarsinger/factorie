@@ -36,7 +36,7 @@ class NumberLabeler[P <: Phrase, PL <: TokenSpanList[P]](implicit ctList:ClassTa
       phrase.attr += number
       if (phrase.length > 0) {
         val firstWord = phrase(0).string.toLowerCase
-        val headPos = phrase.headToken.attr[PennPosTag].categoryValue
+        val headPos = phrase.headToken.attr[PennPosDomain.Tag].categoryValue
         if (singularPronoun.contains(firstWord) || singularDeterminer.contains(firstWord)) number := SINGULAR
         else if (pluralPronoun.contains(firstWord) || pluralDeterminer.contains(firstWord)) number := PLURAL
         else if (isProper(headPos) && phrase.exists(token => token.string.toLowerCase == "and")) number := PLURAL
@@ -52,7 +52,7 @@ class NumberLabeler[P <: Phrase, PL <: TokenSpanList[P]](implicit ctList:ClassTa
   }
   override def tokenAnnotationString(token:Token): String = { val phrases = token.document.attr()(ctList).filter(_.contains(token)); phrases.map(_.attr[NumberLabel[P]].categoryValue).mkString(",") }
   override def phraseAnnotationString(phrase:Phrase): String = { val t = phrase.attr[NumberLabel[P]]; if (t ne null) t.categoryValue else "_" }
-  def prereqAttrs: Iterable[Class[_]] = List(classOf[PennPosTag], classOf[NounPhrase])
+  def prereqAttrs: Iterable[Class[_]] = List(classOf[PennPosDomain.Tag], classOf[NounPhrase])
   def postAttrs: Iterable[Class[_]] = List(classOf[NumberLabel[P]])
 }
 

@@ -1,7 +1,7 @@
 package cc.factorie.app.nlp.coref.mention
 
 import cc.factorie.app.nlp._
-import cc.factorie.app.nlp.pos.PennPosTag
+import cc.factorie.app.nlp.pos.PennPosDomain
 import cc.factorie.app.nlp.ner._
 import scala.collection.mutable.ArrayBuffer
 import cc.factorie.variable.Span
@@ -15,7 +15,7 @@ import cc.factorie.variable.Span
 class NerMentionList(spans:Iterable[Mention]) extends MentionList(spans)
 
 object NerAndPronounMentionFinder extends DocumentAnnotator {
-  def prereqAttrs = Seq(classOf[BilouConllNerTag], classOf[PennPosTag])
+  def prereqAttrs = Seq(classOf[BilouConllNerTag], classOf[PennPosDomain.Tag])
   def postAttrs = Seq(classOf[NerMentionList], classOf[MentionEntityType])
   override def tokenAnnotationString(token:Token): String = token.document.attr[MentionList].filter(mention => mention.contains(token)) match { case ms:Seq[Mention] if ms.length > 0 => ms.map(m => m.attr[MentionType].categoryValue+":"+ m.attr[MentionEntityType].categoryValue +":" +m.indexOf(token)).mkString(","); case _ => "_" }
 
