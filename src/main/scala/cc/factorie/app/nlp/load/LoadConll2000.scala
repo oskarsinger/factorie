@@ -3,7 +3,7 @@ package cc.factorie.app.nlp.load
 import cc.factorie.app.nlp.{Document,Sentence,Token,UnknownDocumentAnnotator}
 import scala.io.Source
 import cc.factorie.variable._
-import cc.factorie.app.nlp.pos.PennPosDomain
+import cc.factorie.app.nlp.pos.PennPosTag
 import scala.Predef._
 
 /**
@@ -24,7 +24,7 @@ object LoadConll2000 extends Load {
     val doc = new Document()
     doc.annotators(classOf[Token]) = UnknownDocumentAnnotator.getClass
     doc.annotators(classOf[Sentence]) = UnknownDocumentAnnotator.getClass
-    doc.annotators(classOf[PennPosDomain.Tag]) = UnknownDocumentAnnotator.getClass
+    doc.annotators(classOf[PennPosTag]) = UnknownDocumentAnnotator.getClass
     doc.annotators(classOf[BIOChunkTag]) = UnknownDocumentAnnotator.getClass
 
     //Enable multiple input encodings
@@ -46,7 +46,7 @@ object LoadConll2000 extends Load {
   private def processWordLine(doc:Document, sent:Sentence, line:String,newChunkLabel: (Token,String) => ChunkTag):Sentence = line match {
     case lineSplit(tokenType, posTagString, chunkTagString) => {
       val t = new Token(sent, tokenType + " ")
-      t.attr += new PennPosDomain.Tag(t, posTranslations.getOrElse(posTagString, identity(posTagString)))
+      t.attr += new PennPosTag(t, posTranslations.getOrElse(posTagString, identity(posTagString)))
       t.attr += newChunkLabel(t, chunkTagString)
       sent
     }

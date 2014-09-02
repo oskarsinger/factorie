@@ -1,4 +1,4 @@
-package cc.factorie.app.nlp.pos
+LabeledTagpackage cc.factorie.app.nlp.pos
 
 import cc.factorie._
 import cc.factorie.app.nlp._
@@ -91,11 +91,11 @@ class ForwardPosTagger extends DocumentAnnotator {
       val lemmas = docWordCounts.keySet
       tokens.foreach(t => {
         tokenCount += 1
-        if (t.attr[PennPosDomain.Tag] eq null) {
+        if (t.attr[PennPosTag] eq null) {
           println("POS1.WordData.preProcess tokenCount "+tokenCount)
           println("POS1.WordData.preProcess token "+t.prev.string+" "+t.prev.attr)
           println("POS1.WordData.preProcess token "+t.string+" "+t.attr)
-          throw new Error("Found training token with no PennPosDomain.Tag.")
+          throw new Error("Found training token with no PennPosTag.")
         }
         val lemma = lemmatize(t.string).toLowerCase
         if (!wordCounts.contains(lemma)) {
@@ -103,7 +103,7 @@ class ForwardPosTagger extends DocumentAnnotator {
           posCounts(lemma) = Array.fill(PennPosDomain.size)(0)
         }
         wordCounts(lemma) += 1
-        posCounts(lemma)(t.attr[PennPosDomain.Tag].intValue) += 1
+        posCounts(lemma)(t.attr[PennPosTag].intValue) += 1
       })
       lemmas.foreach(w => {
         val posFrequencies = posCounts(w).map(_/wordCounts(w))
@@ -121,7 +121,7 @@ class ForwardPosTagger extends DocumentAnnotator {
     def lemmaStringAtOffset(offset:Int): String = "L@"+offset+"="+lemmas.docFreqLc(lemmaIndex + offset) // this is lowercased
     def wordStringAtOffset(offset:Int): String = "W@"+offset+"="+lemmas.docFreq(lemmaIndex + offset) // this is not lowercased, but still has digits replaced
     def affinityTagAtOffset(offset:Int): String = "A@"+offset+"="+WordData.ambiguityClasses.getOrElse(lemmas.lc(lemmaIndex + offset), null)
-    def posTagAtOffset(offset:Int): String = { val t = token.next(offset); "P@"+offset+(if (t ne null) t.attr[PennPosDomain.Tag].categoryValue else null) }
+    def posTagAtOffset(offset:Int): String = { val t = token.next(offset); "P@"+offset+(if (t ne null) t.attr[PennPosTag].categoryValue else null) }
     def takePrefix(s:String, n:Int): String = {if (n <= s.length) "PREFIX="+s.substring(0,n) else null }
     def takeSuffix(s:String, n:Int): String = { val l = s.length; if (n <= l) "SUFFIX="+s.substring(l-n,l) else null }
     val tensor = new SparseBinaryTensor1(FeatureDomain.dimensionSize); tensor.sizeHint(40)
@@ -250,7 +250,7 @@ class ForwardPosTagger extends DocumentAnnotator {
       val lemmaStrings = lemmas(tokens)
       for (index <- 0 until tokens.length) {
         val token = tokens(index)
-        val posLabel = token.attr[PennPosDomain.LabeledTag]
+        val posLabel = token.attr[LabeledPennPosTag]
         val featureVector = features(token, index, lemmaStrings)
         new optimize.PredictorExample(model, featureVector, posLabel.target.intValue, lossAndGradient, 1.0).accumulateValueAndGradient(value, gradient)
         if (exampleSetsToPrediction) {
@@ -264,13 +264,13 @@ class ForwardPosTagger extends DocumentAnnotator {
     val lemmaStrings = lemmas(tokens)
     for (index <- 0 until tokens.length) {
       val token = tokens(index)
-      if (token.attr[PennPosDomain.Tag] eq null) token.attr += new PennPosDomain.Tag(token, "NNP")
+      if (token.attr[PennPosTag] eq null) token.attr += new PennPosTag(token, "NNP")
       val l = lemmatize(token.string).toLowerCase
       if (WordData.sureTokens.contains(l)) {
-        token.attr[PennPosDomain.Tag].set(WordData.sureTokens(l))(null)
+        token.attr[PennPosTag].set(WordData.sureTokens(l))(null)
       } else {
         val featureVector = features(token, index, lemmaStrings)
-        token.attr[PennPosDomain.Tag].set(model.classification(featureVector).bestLabelIndex)(null)
+        token.attr[PennPosTag].set(model.classification(featureVector).bestLabelIndex)(null)
       }
     }
   }
@@ -333,7 +333,7 @@ class ForwardPosTagger extends DocumentAnnotator {
       totalTime += (System.currentTimeMillis()-t0)
       for (token <- s.tokens) {      
         tokenTotal += 1
-        if (token.attr[PennPosDomain.LabeledTag].valueIsTarget) tokenCorrect += 1.0
+        if (token.attr[LabeledPennPosTag].valueIsTarget) tokenCorrect += 1.0
         else thisSentenceCorrect = 0.0
       }
       sentenceCorrect += thisSentenceCorrect
@@ -384,7 +384,7 @@ class ForwardPosTagger extends DocumentAnnotator {
       // Print test results to file
       val source = new java.io.PrintStream(new File("pos1-test-output.txt"))
       for (s <- testSentences) {
-        for (t <- s.tokens) { val p = t.attr[PennPosDomain.LabeledTag]; source.println("%s %20s  %6s %6s".format(if (p.valueIsTarget) " " else "*", t.string, p.target.categoryValue, p.categoryValue)) }
+        for (t <- s.tokens) { val p = t.attr[LabeledPennPosTag]; source.println("%s %20s  %6s %6s".format(if (p.valueIsTarget) " " else "*", t.string, p.target.categoryValue, p.categoryValue)) }
         source.println()
       }
       source.close()
@@ -394,8 +394,8 @@ class ForwardPosTagger extends DocumentAnnotator {
   def process(d: Document) = { predict(d); d }
   def process(s: Sentence) = { predict(s); s }
   def prereqAttrs: Iterable[Class[_]] = List(classOf[Token], classOf[Sentence], classOf[segment.PlainNormalizedTokenString])
-  def postAttrs: Iterable[Class[_]] = List(classOf[PennPosDomain.Tag])
-  override def tokenAnnotationString(token:Token): String = { val label = token.attr[PennPosDomain.Tag]; if (label ne null) label.categoryValue else "(null)" }
+  def postAttrs: Iterable[Class[_]] = List(classOf[PennPosTag])
+  override def tokenAnnotationString(token:Token): String = { val label = token.attr[PennPosTag]; if (label ne null) label.categoryValue else "(null)" }
 }
 
 /** The default part-of-speech tagger, trained on Penn Treebank Wall Street Journal, with parameters loaded from resources in the classpath. */

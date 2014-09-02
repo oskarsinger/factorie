@@ -2,7 +2,7 @@ package cc.factorie.app.nlp.parse
 
 import cc.factorie.app.nlp._
 import cc.factorie._
-import cc.factorie.app.nlp.pos.PennPosDomain
+import cc.factorie.app.nlp.pos.PennPosTag
 import scala.collection.mutable.{HashMap, ArrayBuffer}
 import scala.util.parsing.json.JSON
 import scala.annotation.tailrec
@@ -209,7 +209,7 @@ class TransitionBasedParser extends DocumentAnnotator {
 
   // For DocumentAnnotator trait
   def process(doc: Document) = { doc.sentences.foreach(process); doc }
-  def prereqAttrs = Seq(classOf[Sentence], classOf[PennPosDomain.Tag], classOf[lemma.WordNetTokenLemma]) // Sentence also includes Token
+  def prereqAttrs = Seq(classOf[Sentence], classOf[PennPosTag], classOf[lemma.WordNetTokenLemma]) // Sentence also includes Token
   def postAttrs = Seq(classOf[ParseTree])
   override def tokenAnnotationString(token:Token): String = {
     val sentence = token.sentence

@@ -18,8 +18,8 @@ import cc.factorie.app.nlp._
 import cc.factorie.variable._
 
 /** Penn Treebank part-of-speech tag domain. */
-object PennPosDomain extends PosDomain {
-  this ++= Vector(
+object PennPosDomain extends PosDomain(
+  Vector(
       "#", // In WSJ but not in Ontonotes
       "$",
       "''",
@@ -71,15 +71,17 @@ object PennPosDomain extends PosDomain {
       "HYPH", // in Ontonotes, but not WSJ
       "NFP", // in Ontonotes, but not WSJ
       "XX" // in Ontonotes, but not WSJ
-  )
-  freeze()
+  ),
+  (pos: String) => pos(0) == 'N',
+  (pos: String) => { pos == "NNP" || pos == "NNPS" },
+  (pos: String) => pos(0) == 'V',
+  (pos: String) => pos(0) == 'J',
+  (pos: String) => pos == "PRP"
+)
 
-  def isNoun(pos:String): Boolean = pos(0) == 'N' 
-  def isProperNoun(pos:String) = { pos == "NNP" || pos == "NNPS" }
-  def isVerb(pos:String) = pos(0) == 'V'
-  def isAdjective(pos:String) = pos(0) == 'J'
-  def isPersonalPronoun(pos: String) = pos == "PRP"
-}
+class PennPosTag(val token: Token, initialValue: String) extends PosTag(token, initialValue, PennPosDomain)
+
+class LabeledPennPosTag(val token: Token, targetValue: String) extends LabeledPosTag(token, targetValue, PennPosDomain)
 
 /** The "A Universal Part-of-Speech Tagset"
     by Slav Petrov, Dipanjan Das and Ryan McDonald
@@ -175,7 +177,7 @@ object UniversalPosDomain extends EnumDomain {
 
   /** A categorical variable, associated with a token, holding its Google Universal part-of-speech category.  */
   class UniversalPosTag(val token:Token, initialValue:String) extends CategoricalVariable(initialValue) {
-    def this(token:Token, other:PennPosDomain.Tag) = this(token, UniversalPosDomain.categoryFromPenn(other.categoryValue))
+    def this(token:Token, other:PennPosTag) = this(token, UniversalPosDomain.categoryFromPenn(other.categoryValue))
     def domain = UniversalPosDomain
   }
   /** A categorical variable, associated with a token, holding its Google Universal part-of-speech category,

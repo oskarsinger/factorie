@@ -4,7 +4,7 @@ import cc.factorie._
 import java.io.File
 import cc.factorie.util.BinarySerializer
 import cc.factorie.app.nlp._
-import cc.factorie.app.nlp.pos.PennPosDomain
+import cc.factorie.app.nlp.pos.{PennPosTag, LabeledPennPosTag, PennPosDomain}
 import app.chain.Observations.addNeighboringFeatureConjunctions
 import cc.factorie.optimize.Trainer
 import cc.factorie.variable.{LabeledVar, BinaryFeatureVectorVariable, CategoricalVectorDomain}
@@ -25,7 +25,7 @@ object ForwardBackwardPOS {
   object PosFeaturesDomain extends CategoricalVectorDomain[String]
   class PosFeatures(val token:Token) extends BinaryFeatureVectorVariable[String] { def domain = PosFeaturesDomain }
 
-  object PosModel extends ChainModel[PennPosDomain.LabeledTag,PosFeatures,Token](PennPosDomain, PosFeaturesDomain, l => l.token.attr[PosFeatures], l => l.token, t => t.attr[PennPosDomain.LabeledTag])
+  object PosModel extends ChainModel[LabeledPennPosTag,PosFeatures,Token](PennPosDomain, PosFeaturesDomain, l => l.token.attr[PosFeatures], l => l.token, t => t.attr[LabeledPennPosTag])
 
   def initPosFeatures(documents: Seq[Document]): Unit = documents.map(initPosFeatures)
   def initPosFeatures(document: Document): Unit = {
@@ -55,8 +55,8 @@ object ForwardBackwardPOS {
     numCorrect / ls.size * 100
   }
 
-  def predictSentence(s: Sentence): Unit = predictSentence(s.tokens.map(_.attr[PennPosDomain.LabeledTag]))
-  def predictSentence(vs: Seq[PennPosDomain.LabeledTag], oldBp: Boolean = false): Unit =
+  def predictSentence(s: Sentence): Unit = predictSentence(s.tokens.map(_.attr[LabeledPennPosTag]))
+  def predictSentence(vs: Seq[LabeledPennPosTag], oldBp: Boolean = false): Unit =
     PosModel.maximize(vs)(null)
 
   def train(
@@ -80,7 +80,7 @@ object ForwardBackwardPOS {
     val sentences: Seq[Sentence] = documents.flatMap(_.sentences)
     val sentenceTags = sentences.map(_.posTags).filter(_.size > 0)
 
-    val examples = sentenceTags.map(s => new PosModel.ChainLikelihoodExample(s.asInstanceOf[Seq[PennPosDomain.LabeledTag]]))
+    val examples = sentenceTags.map(s => new PosModel.ChainLikelihoodExample(s.asInstanceOf[Seq[LabeledPennPosTag]]))
     Trainer.onlineTrain(PosModel.parameters, examples, maxIterations=10)
     testSavePrint("final")
   }
@@ -88,7 +88,7 @@ object ForwardBackwardPOS {
   def test(documents: Seq[Document], label: String = "test"): Unit = {
     implicit val random = new scala.util.Random(0)
     val sentences = documents.flatMap(_.sentences)
-    val labels = sentences.map(_.tokens).flatMap(_.map(t => t.attr[PennPosDomain.LabeledTag]))
+    val labels = sentences.map(_.tokens).flatMap(_.map(t => t.attr[LabeledPennPosTag]))
     labels.map(_.setRandomly)
     sentences.map(predictSentence)
     println(label + " accuracy: " + percentageSetToTarget(labels) + "%")
@@ -102,7 +102,7 @@ object ForwardBackwardPOS {
     if (!modelLoaded) throw new Error("The model should be loaded before documents are processed.")
 
     // add the labels and features if they aren't there already.
-    if (document.tokens.head.attr.get[PennPosDomain.Tag] == None) {
+    if (document.tokens.head.attr.get[PennPosTag] == None) {
       document.tokens.foreach(t => t.attr += labelMaker(t))
       initPosFeatures(document)
     }
@@ -114,7 +114,7 @@ object ForwardBackwardPOS {
     try { PennPosDomain.categories.head }
     catch { case e: NoSuchElementException => throw new Error("The domain must be loaded before it is accessed.") }
   }
-  def labelMaker(t: Token, l: String = defaultCategory) = new PennPosDomain.LabeledTag(t, l)
+  def labelMaker(t: Token, l: String = defaultCategory) = new LabeledPennPosTag(t, l)
 
   def main(args: Array[String]): Unit = {
     object opts extends cc.factorie.util.DefaultCmdOptions {

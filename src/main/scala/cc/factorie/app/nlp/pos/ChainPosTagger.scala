@@ -20,7 +20,7 @@ class ChainPosTagger[A <: PosDomain](val posDomain: A) extends DocumentAnnotator
       if (s.nonEmpty) {
         s.tokens.foreach(t => if (!t.attr.contains[posDomain.Tag]) t.attr += new posDomain.Tag(t, "NN"))
         initPOSFeatures(s)
-        model.maximize(s.tokens.map(_.posTag))(null)
+        model.maximize(s.tokens.map( token => token.posTag ))(null)
       }
     })
     document
@@ -52,6 +52,7 @@ class ChainPosTagger[A <: PosDomain](val posDomain: A) extends DocumentAnnotator
     testSentences.foreach(initPOSFeatures)
     def evaluate() {
       (trainSentences ++ testSentences).foreach(s => model.maximize(s.tokens.map(_.attr[posDomain.LabeledTag]))(null))
+      val isNoun = posDomain.isNoun("NN")
       println("Train accuracy: "+ HammingObjective.accuracy(trainSentences.flatMap(s => s.tokens.map(_.attr[posDomain.LabeledTag]))))
       println("Test accuracy: "+ HammingObjective.accuracy(testSentences.flatMap(s => s.tokens.map(_.attr[posDomain.LabeledTag]))))
     }

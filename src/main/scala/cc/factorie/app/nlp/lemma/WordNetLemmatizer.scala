@@ -85,7 +85,7 @@ class WordNetLemmatizer(val inputStreamFactory: String=>InputStream) extends Doc
     document
   }
   override def tokenAnnotationString(token:Token): String = { val l = token.attr[WordNetTokenLemma]; l.value }
-  def prereqAttrs: Iterable[Class[_]] = List(classOf[PennPosDomain.Tag])
+  def prereqAttrs: Iterable[Class[_]] = List(classOf[PennPosTag])
   def postAttrs: Iterable[Class[_]] = List(classOf[WordNetTokenLemma])
 
   private def wordbase(w: String, pos: String): String = {

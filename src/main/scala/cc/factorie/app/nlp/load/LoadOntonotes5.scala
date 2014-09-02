@@ -2,7 +2,7 @@ package cc.factorie.app.nlp.load
 
 import scala.io.Source
 import cc.factorie.app.nlp._
-import cc.factorie.app.nlp.pos.PennPosDomain
+import cc.factorie.app.nlp.pos.{PennPosTag, LabeledPennPosTag}
 import cc.factorie.app.nlp.ner._
 import cc.factorie.app.nlp.parse.ParseTree
 import cc.factorie.app.nlp.lemma.TokenLemma
@@ -46,7 +46,7 @@ object LoadOntonotes5 {
     val document: Document = new Document().setName("Ontonotes499/" + filename)
     document.annotators(classOf[Token]) = UnknownDocumentAnnotator.getClass // register that we have token boundaries
     document.annotators(classOf[Sentence]) = UnknownDocumentAnnotator.getClass // register that we have sentence boundaries
-    if (loadPos != AnnotationTypes.NONE) document.annotators(classOf[pos.PennPosDomain.Tag]) = UnknownDocumentAnnotator.getClass // register that we have POS tags
+    if (loadPos != AnnotationTypes.NONE) document.annotators(classOf[PennPosTag]) = UnknownDocumentAnnotator.getClass // register that we have POS tags
     if (loadNer) if (nerBilou) document.annotators(classOf[ner.BilouOntonotesNerTag]) = UnknownDocumentAnnotator.getClass else document.annotators(classOf[ner.BioOntonotesNerTag]) = UnknownDocumentAnnotator.getClass
     var sentence: Sentence = new Sentence(document)
     var depInfoSeq = new collection.mutable.ArrayBuffer[(Int,Int,String)]
@@ -83,8 +83,8 @@ object LoadOntonotes5 {
         document.appendString(" ")
         val token = new Token(sentence, word)
         loadPos match{
-	      case AnnotationTypes.GOLD => {token.attr += new PennPosDomain.LabeledTag(token, if (goldPartOfSpeech == "XX") "PUNC" else goldPartOfSpeech)}
-	      case AnnotationTypes.AUTO => {token.attr += new PennPosDomain.LabeledTag(token, if (autoPartOfSpeech == "XX") "PUNC" else autoPartOfSpeech)}
+	      case AnnotationTypes.GOLD => {token.attr += new LabeledPennPosTag(token, if (goldPartOfSpeech == "XX") "PUNC" else goldPartOfSpeech)}
+	      case AnnotationTypes.AUTO => {token.attr += new LabeledPennPosTag(token, if (autoPartOfSpeech == "XX") "PUNC" else autoPartOfSpeech)}
 	      case AnnotationTypes.NONE => {/* do nothing */}
         }
         loadLemma match{

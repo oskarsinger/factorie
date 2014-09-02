@@ -4,7 +4,7 @@ import cc.factorie.app.nlp.wordnet.WordNet
 import scala.collection.mutable
 import cc.factorie.util.coref.GenericEntityMap
 import cc.factorie.app.nlp._
-import cc.factorie.app.nlp.pos.PennPosDomain
+import cc.factorie.app.nlp.pos.PennPosTag
 import collection.mutable.{ArrayBuffer, HashMap}
 import cc.factorie.app.nlp.parse.ParseTree
 import scala.Some
@@ -29,7 +29,7 @@ object MentionAlignment {
     //make sure that they have the same names, i.e. they were loaded in the same order and subspampled consistently
     documents.zip(documentsToBeProcessed).foreach(dd => assert(dd._1.name == dd._2.name))
 
-    documentsToBeProcessed.foreach( d => d.tokens.foreach(t => t.attr.remove[PennPosDomain.Tag]))  //remove the gold POS annotation
+    documentsToBeProcessed.foreach( d => d.tokens.foreach(t => t.attr.remove[PennPosTag]))  //remove the gold POS annotation
     documentsToBeProcessed.foreach(_.attr.remove[MentionList])
     //now do POS tagging and parsing on the extracted tokens
     cc.factorie.util.Threading.parForeach(documentsToBeProcessed, Runtime.getRuntime.availableProcessors())(findMentions(_)(map))

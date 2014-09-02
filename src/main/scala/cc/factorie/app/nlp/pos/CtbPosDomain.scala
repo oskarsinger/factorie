@@ -19,8 +19,8 @@ import cc.factorie.app.nlp._
 import cc.factorie.variable._
 
 /** Penn Treebank part-of-speech tag domain. */
-object CtbPosDomain extends CategoricalDomain[String] {
-  this ++= Vector(
+object CtbPosDomain extends PosDomain(
+  Vector(
     "VA",
     "VC",
     "VE",
@@ -55,12 +55,14 @@ object CtbPosDomain extends CategoricalDomain[String] {
     "LB",
     "SB",
     "BA"
-  )
-  freeze()
-
-  def isNoun(pos: String): Boolean = pos(0) == 'N' 
-  def isProperNoun(pos: String): Boolean = { pos == "NR" }
-  def isVerb(pos: String): Boolean = pos(0) == 'V'
-  def isAdjective(pos: String): Boolean = pos(0) == 'J'
-  def isPersonalPronoun(pos: String): Boolean = pos == "PRP"
+  ),
+  (pos: String) => pos(0) == 'N',
+  (pos: String) => pos == "NR",
+  (pos: String) => pos(0) == 'V',
+  (pos: String) => pos(0) == 'J',
+  (pos: String) => pos == "PRP"
 }
+
+class CtbPosTag(val token: Token, initialValue: String) extends PosTag(token, initialValue, CtbPosDomain)
+
+class LabeledCtbPosTag(val token: Token, targetValue: String) extends LabeledPosTag(token, targetValue, CtbPosDomain)
