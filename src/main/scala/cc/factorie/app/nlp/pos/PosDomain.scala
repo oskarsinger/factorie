@@ -4,73 +4,23 @@ import cc.factorie._
 import cc.factorie.app.nlp._
 import cc.factorie.variable._
 
-class PosDomain(elements: Vector[String]) extends CategoricalDomain[String]{
+class PosDomain(elements: Vector[String],
+                isNounFunc: (String) => (Boolean),
+                isProperNounFunc: (String) => (Boolean),
+                isAdjectiveFunc: (String) => (Boolean),
+                isVerbFunc: (String) => (Boolean),
+                isPersonalPronounFunc: (String) => (Boolean)) extends CategoricalDomain[String]{
 
   this ++= elements
   freeze()
 
-  def isNoun(pos: String): Boolean
-  def isProperNoun(pos: String): Boolean
-  def isAdjective(pos: String): Boolean
-  def isVerb(pos: String): Boolean
-  def isPersonalPronoun(pos: String): Boolean
+  def isNoun(pos: String): Boolean = isNounFunc
+  def isProperNoun(pos: String): Boolean = isProperNounFunc
+  def isAdjective(pos: String): Boolean = isAdjectiveFunc
+  def isVerb(pos: String): Boolean = isVerbFunc
+  def isPersonalPronoun(pos: String): Boolean = isPersonalPronounFunc
 
 }
-object PennPosDomain extends PosDomain(
-  Vector(
-      "#", // In WSJ but not in Ontonotes
-      "$",
-      "''",
-      ",",
-      "-LRB-",
-      "-RRB-",
-      ".",
-      ":",
-      "CC",
-      "CD",
-      "DT",
-      "EX",
-      "FW",
-      "IN",
-      "JJ",
-      "JJR",
-      "JJS",
-      "LS",
-      "MD",
-      "NN",
-      "NNP",
-      "NNPS",
-      "NNS",
-      "PDT",
-      "POS",
-      "PRP",
-      "PRP$",
-      "PUNC",
-      "RB",
-      "RBR",
-      "RBS",
-      "RP",
-      "SYM",
-      "TO",
-      "UH",
-      "VB",
-      "VBD",
-      "VBG",
-      "VBN",
-      "VBP",
-      "VBZ",
-      "WDT",
-      "WP",
-      "WP$",
-      "WRB",
-      "``",
-      "ADD", // in Ontonotes, but not WSJ
-      "AFX", // in Ontonotes, but not WSJ
-      "HYPH", // in Ontonotes, but not WSJ
-      "NFP", // in Ontonotes, but not WSJ
-      "XX" // in Ontonotes, but not WSJ
-  )
-)
 
 class PosTag(val token: Token, initialValue: String, posDomain: PosDomain) extends CategoricalVariable(initialValue) {
 
@@ -83,3 +33,4 @@ class PosTag(val token: Token, initialValue: String, posDomain: PosDomain) exten
 }
 
 class LabeledPosTag(token: Token, targetValue: String, posDomain: PosDomain) extends PosTag(token, targetValue, posDomain) with CategoricalLabeling[String]
+

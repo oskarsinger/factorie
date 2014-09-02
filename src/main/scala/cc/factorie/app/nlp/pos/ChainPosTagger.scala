@@ -13,14 +13,17 @@ import cc.factorie.variable.{HammingObjective, BinaryFeatureVectorVariable, Cate
  * Date: 7/15/13
  * Time: 2:55 PM
  */
-class ChainPosTagger[A <: PosDomain](val posDomain: A) extends DocumentAnnotator {
-  def this(posDomain: A, url: java.net.URL) = { this(posDomain); deserialize(url.openConnection().getInputStream) }
+class ChainPosTagger(val posDomain: PosDomain) extends DocumentAnnotator {
+  def this(posDomain: PosDomain, url: java.net.URL) = { 
+    this(posDomain);
+    deserialize(url.openConnection().getInputStream);
+  }
   def process(document: Document) = {
     document.sentences.foreach(s => {
       if (s.nonEmpty) {
         s.tokens.foreach(t => if (!t.attr.contains[posDomain.Tag]) t.attr += new posDomain.Tag(t, "NN"))
         initPOSFeatures(s)
-        model.maximize(s.tokens.map( token => token.posTag ))(null)
+        model.maximize(s.tokens.map(_.posTag))(null)
       }
     })
     document
@@ -52,7 +55,6 @@ class ChainPosTagger[A <: PosDomain](val posDomain: A) extends DocumentAnnotator
     testSentences.foreach(initPOSFeatures)
     def evaluate() {
       (trainSentences ++ testSentences).foreach(s => model.maximize(s.tokens.map(_.attr[posDomain.LabeledTag]))(null))
-      val isNoun = posDomain.isNoun("NN")
       println("Train accuracy: "+ HammingObjective.accuracy(trainSentences.flatMap(s => s.tokens.map(_.attr[posDomain.LabeledTag]))))
       println("Test accuracy: "+ HammingObjective.accuracy(testSentences.flatMap(s => s.tokens.map(_.attr[posDomain.LabeledTag]))))
     }
