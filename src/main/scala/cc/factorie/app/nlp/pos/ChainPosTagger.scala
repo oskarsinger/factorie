@@ -15,13 +15,13 @@ import cc.factorie.variable.{HammingObjective, BinaryFeatureVectorVariable, Cate
  */
 class ChainPosTagger(val posDomain: PosDomain) extends DocumentAnnotator {
   def this(posDomain: PosDomain, url: java.net.URL) = { 
-    this(posDomain);
-    deserialize(url.openConnection().getInputStream);
+    this(posDomain)
+    deserialize(url.openConnection().getInputStream)
   }
   def process(document: Document) = {
     document.sentences.foreach(s => {
       if (s.nonEmpty) {
-        s.tokens.foreach(t => if (!t.attr.contains[posDomain.Tag]) t.attr += new posDomain.Tag(t, "NN"))
+        s.tokens.foreach(t => if (!t.attr.contains[PosTag]) t.attr += posDomain.newPosTag(t, "NN"))
         initPOSFeatures(s)
         model.maximize(s.tokens.map(_.posTag))(null)
       }
@@ -30,8 +30,8 @@ class ChainPosTagger(val posDomain: PosDomain) extends DocumentAnnotator {
   }
 
   def prereqAttrs = Seq(classOf[Token], classOf[Sentence])
-  def postAttrs = Seq(classOf[posDomain.Tag])
-  def tokenAnnotationString(token: Token) = { val label = token.attr[posDomain.Tag]; if (label ne null) label.categoryValue else "(null)" }
+  def postAttrs = Seq(classOf[PosTag])
+  def tokenAnnotationString(token: Token) = { val label = token.attr[PosTag]; if (label ne null) label.categoryValue else "(null)" }
 
   def serialize(stream: OutputStream) {
     import cc.factorie.util.CubbieConversions._
@@ -54,15 +54,15 @@ class ChainPosTagger(val posDomain: PosDomain) extends DocumentAnnotator {
     PosFeaturesDomain.freeze()
     testSentences.foreach(initPOSFeatures)
     def evaluate() {
-      (trainSentences ++ testSentences).foreach(s => model.maximize(s.tokens.map(_.attr[posDomain.LabeledTag]))(null))
-      println("Train accuracy: "+ HammingObjective.accuracy(trainSentences.flatMap(s => s.tokens.map(_.attr[posDomain.LabeledTag]))))
-      println("Test accuracy: "+ HammingObjective.accuracy(testSentences.flatMap(s => s.tokens.map(_.attr[posDomain.LabeledTag]))))
+      (trainSentences ++ testSentences).foreach(s => model.maximize(s.tokens.map(_.attr[LabeledPosTag]))(null))
+      println("Train accuracy: "+ HammingObjective.accuracy(trainSentences.flatMap(s => s.tokens.map(_.attr[LabeledPosTag]))))
+      println("Test accuracy: "+ HammingObjective.accuracy(testSentences.flatMap(s => s.tokens.map(_.attr[LabeledPosTag]))))
     }
     val examples =
     if(useHingeLoss)
-      trainSentences.map(sentence => new model.ChainStructuredSVMExample(sentence.tokens.map(_.attr[posDomain.LabeledTag]))).toSeq
+      trainSentences.map(sentence => new model.ChainStructuredSVMExample(sentence.tokens.map(_.attr[LabeledPosTag]))).toSeq
     else
-      trainSentences.map(sentence => new model.ChainLikelihoodExample(sentence.tokens.map(_.attr[posDomain.LabeledTag])))
+      trainSentences.map(sentence => new model.ChainLikelihoodExample(sentence.tokens.map(_.attr[LabeledPosTag])))
     //val optimizer = new cc.factorie.optimize.AdaGrad(rate=lrate)
     val optimizer = new cc.factorie.optimize.AdaGradRDA(rate=lrate, l1=l1Factor/examples.length, l2=l2Factor/examples.length)
     Trainer.onlineTrain(model.parameters, examples, maxIterations=numIterations, optimizer=optimizer, evaluate=evaluate, useParallelTrainer = false)
@@ -73,11 +73,11 @@ class ChainPosTagger(val posDomain: PosDomain) extends DocumentAnnotator {
   class PosFeatures(val token:Token) extends BinaryFeatureVectorVariable[String] { def domain = PosFeaturesDomain; override def skipNonCategories = true }
 
 
-  val model = new ChainModel[posDomain.Tag, PosFeatures, Token](posDomain,
+  val model = new ChainModel[PosTag, PosFeatures, Token](posDomain,
     PosFeaturesDomain,
     l => l.token.attr[PosFeatures],
     l => l.token,
-    t => t.attr[posDomain.Tag]){
+    t => t.attr[PosTag]){
     useObsMarkov = false
   }
 
@@ -150,7 +150,7 @@ object ChainPosTrainer extends HyperparameterMain {
       val pos2 = new ChainPosTagger(PennPosDomain)
       pos2.deserialize(new FileInputStream(new java.io.File(opts.modelFile.value)))
     }
-    val acc = HammingObjective.accuracy(testDocs.flatMap(d => d.sentences.flatMap(s => s.tokens.map(_.attr[posDomain.LabeledTag]))))
+    val acc = HammingObjective.accuracy(testDocs.flatMap(d => d.sentences.flatMap(s => s.tokens.map(_.attr[LabeledPosTag]))))
     if(opts.targetAccuracy.wasInvoked) cc.factorie.assertMinimalAccuracy(acc,opts.targetAccuracy.value.toDouble)
 
     acc

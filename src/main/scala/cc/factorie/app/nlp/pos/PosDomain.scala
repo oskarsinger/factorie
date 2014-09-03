@@ -14,12 +14,13 @@ class PosDomain(elements: Vector[String],
   this ++= elements
   freeze()
 
-  def isNoun(pos: String): Boolean = isNounFunc
-  def isProperNoun(pos: String): Boolean = isProperNounFunc
-  def isAdjective(pos: String): Boolean = isAdjectiveFunc
-  def isVerb(pos: String): Boolean = isVerbFunc
-  def isPersonalPronoun(pos: String): Boolean = isPersonalPronounFunc
-
+  def isNoun(pos: String): Boolean = isNounFunc(pos)
+  def isProperNoun(pos: String): Boolean = isProperNounFunc(pos)
+  def isAdjective(pos: String): Boolean = isAdjectiveFunc(pos)
+  def isVerb(pos: String): Boolean = isVerbFunc(pos)
+  def isPersonalPronoun(pos: String): Boolean = isPersonalPronounFunc(pos)
+  def newPosTag(token: Token, initialValue: String): PosTag = new PosTag(token, initialValue, this)
+  def newLabeledPosTag(token: Token, targetValue: String): LabeledPosTag = new LabeledPosTag(token, targetValue, this)
 }
 
 class PosTag(val token: Token, initialValue: String, posDomain: PosDomain) extends CategoricalVariable(initialValue) {

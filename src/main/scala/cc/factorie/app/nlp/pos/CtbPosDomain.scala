@@ -61,8 +61,4 @@ object CtbPosDomain extends PosDomain(
   (pos: String) => pos(0) == 'V',
   (pos: String) => pos(0) == 'J',
   (pos: String) => pos == "PRP"
-}
-
-class CtbPosTag(val token: Token, initialValue: String) extends PosTag(token, initialValue, CtbPosDomain)
-
-class LabeledCtbPosTag(val token: Token, targetValue: String) extends LabeledPosTag(token, targetValue, CtbPosDomain)
+)

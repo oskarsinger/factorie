@@ -79,10 +79,6 @@ object PennPosDomain extends PosDomain(
   (pos: String) => pos == "PRP"
 )
 
-class PennPosTag(val token: Token, initialValue: String) extends PosTag(token, initialValue, PennPosDomain)
-
-class LabeledPennPosTag(val token: Token, targetValue: String) extends LabeledPosTag(token, targetValue, PennPosDomain)
-
 /** The "A Universal Part-of-Speech Tagset"
     by Slav Petrov, Dipanjan Das and Ryan McDonald
     http://arxiv.org/abs/1104.2086
@@ -177,7 +173,7 @@ object UniversalPosDomain extends EnumDomain {
 
   /** A categorical variable, associated with a token, holding its Google Universal part-of-speech category.  */
   class UniversalPosTag(val token:Token, initialValue:String) extends CategoricalVariable(initialValue) {
-    def this(token:Token, other:PennPosTag) = this(token, UniversalPosDomain.categoryFromPenn(other.categoryValue))
+    def this(token:Token, other:PosTag) = this(token, UniversalPosDomain.categoryFromPenn(other.categoryValue))
     def domain = UniversalPosDomain
   }
   /** A categorical variable, associated with a token, holding its Google Universal part-of-speech category,
