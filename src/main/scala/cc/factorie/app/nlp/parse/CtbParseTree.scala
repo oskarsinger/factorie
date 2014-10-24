@@ -22,7 +22,7 @@ import cc.factorie.variable.{LabeledCategoricalVariable, EnumDomain}
 // Representation for a dependency parse
 
 // TODO I think this should instead be "ParseEdgeLabelDomain". -akm
-object ParseTreeLabelDomain extends EnumDomain {
+object CtbParseTreeLabelDomain extends EnumDomain {
   val acomp, advcl, advmod, agent, amod, appos, attr, aux, auxpass, cc, ccomp, complm, conj, csubj, csubjpass, 
   dep, det, dobj, expl, hmod, hyph, infmod, intj, iobj, mark, meta, neg, nmod, nn, npadvmod, nsubj, nsubjpass, 
   num, number, oprd, parataxis, partmod, pcomp, pobj, poss, possessive, preconj, predet, prep, prt, punct, 
@@ -32,23 +32,23 @@ object ParseTreeLabelDomain extends EnumDomain {
   def defaultCategory = "nn"
 }
 // TODO I think this should instead be "ParseEdgeLabels extends LabeledCategoricalSeqVariable". -akm
-class ParseTreeLabel(val tree:ParseTree, targetValue:String = ParseTreeLabelDomain.defaultCategory) extends LabeledCategoricalVariable(targetValue) { def domain = ParseTreeLabelDomain }
+class CtbParseTreeLabel(val tree:ParseTree, targetValue:String = CtbParseTreeLabelDomain.defaultCategory) extends LabeledCategoricalVariable(targetValue) { def domain = CtbParseTreeLabelDomain }
 
-object ParseTree {
+object CtbParseTree {
   val rootIndex = -1
   val noIndex = -2
 }
 
 // TODO This initialization is really inefficient.  Fix it. -akm
-class ParseTree(val sentence:Sentence, theTargetParents:Seq[Int], theTargetLabels:Seq[String]) {
-  def this(sentence:Sentence) = this(sentence, Array.fill[Int](sentence.length)(ParseTree.noIndex), Array.tabulate(sentence.length)(i => ParseTreeLabelDomain.defaultCategory)) // Note: this puts in dummy target data which may be confusing
-  val _labels = theTargetLabels.map(s => new ParseTreeLabel(this, s)).toArray
+class CtbParseTree(val sentence:Sentence, theTargetParents:Seq[Int], theTargetLabels:Seq[String]) {
+  def this(sentence:Sentence) = this(sentence, Array.fill[Int](sentence.length)(CtbParseTree.noIndex), Array.tabulate(sentence.length)(i => ParseTreeLabelDomain.defaultCategory)) // Note: this puts in dummy target data which may be confusing
+  val _labels = theTargetLabels.map(s => new CtbParseTreeLabel(this, s)).toArray
   val _parents = theTargetParents.toArray
   val _targetParents = theTargetParents.toArray
   //println("ParseTree parents "+theTargetParents.mkString(" "))
   //println(" ParseTree labels "+theTargetLabels.mkString(" "))
   //println(" ParseTree labels "+_labels.map(_.categoryValue).mkString(" "))
-  def labels: Array[ParseTreeLabel] = _labels
+  def labels: Array[CtbParseTreeLabel] = _labels
   def parents: Array[Int] = _parents
   def targetParents: Array[Int] = _targetParents
   def setParentsToTarget(): Unit = System.arraycopy(_targetParents, 0, _parents, 0, _parents.length)
@@ -63,8 +63,8 @@ class ParseTree(val sentence:Sentence, theTargetParents:Seq[Int], theTargetLabel
   /** Make the argument the root of the tree.  This method does not prevent their being two roots. */
   def setRootChild(token:Token): Unit = setParent(token.position - sentence.start, -1)
   /** Returns the sentence position of the parent of the token at position childIndex */
-  def parentIndex(childIndex:Int): Int = if (childIndex == ParseTree.rootIndex) ParseTree.noIndex else _parents(childIndex)
-  def targetParentIndex(childIndex:Int): Int = if (childIndex == ParseTree.rootIndex) ParseTree.noIndex else _targetParents(childIndex)
+  def parentIndex(childIndex:Int): Int = if (childIndex == CtbParseTree.rootIndex) CtbParseTree.noIndex else _parents(childIndex)
+  def targetParentIndex(childIndex:Int): Int = if (childIndex == CtbParseTree.rootIndex) CtbParseTree.noIndex else _targetParents(childIndex)
   /** Returns the parent token of the token at position childIndex (or null if the token at childIndex is the root) */
   def parent(childIndex:Int): Token = {
     val idx = _parents(childIndex)
@@ -179,9 +179,9 @@ class ParseTree(val sentence:Sentence, theTargetParents:Seq[Int], theTargetLabel
   //def childrenLabeled(index:Int, labelValue:DiscreteValue): Seq[Token] = childrenLabeled(index, labelValue.intValue) 
   //def childrenOfLabel(token:Token, labelValue:DiscreteValue): Seq[Token] = childrenOfLabel(token.position - sentence.start, labelValue.intValue)
   /** Return the label on the edge from the child at sentence position 'index' to its parent. */
-  def label(index:Int): ParseTreeLabel = _labels(index)
-  def copy: ParseTree = {
-    val newTree = new ParseTree(sentence, targetParents, labels.map(_.target.categoryValue))
+  def label(index:Int): CtbParseTreeLabel = _labels(index)
+  def copy: CtbParseTree = {
+    val newTree = new CtbParseTree(sentence, targetParents, labels.map(_.target.categoryValue))
     for (i <- 0 until sentence.length) {
       newTree._parents(i) = this._parents(i)
       newTree._labels(i).set(this._labels(i).intValue)(null)
@@ -250,16 +250,16 @@ class ParseTree(val sentence:Sentence, theTargetParents:Seq[Int], theTargetLabel
 // token.parseLabel
 // token.leftChildren
 
-class ParseTreeCubbie extends Cubbie {
+class CtbParseTreeCubbie extends Cubbie {
   val parents = IntListSlot("parents")
   val labels = StringListSlot("labels")
-  def newParseTree(s:Sentence): ParseTree = new ParseTree(s) // This will be abstract when ParseTree domain is unfixed
-  def storeParseTree(pt:ParseTree): this.type = {
+  def newParseTree(s:Sentence): CtbParseTree = new CtbParseTree(s) // This will be abstract when ParseTree domain is unfixed
+  def storeParseTree(pt:CtbParseTree): this.type = {
     parents := pt.parents
     labels := pt.labels.map(_.categoryValue)
     this
   }
-  def fetchParseTree(s:Sentence): ParseTree = {
+  def fetchParseTree(s:Sentence): CtbParseTree = {
     val pt = newParseTree(s)
     for (i <- 0 until s.length) {
       pt.setParent(i, parents.value(i))

@@ -14,7 +14,7 @@ package cc.factorie.app.nlp.parse
 
 import cc.factorie.app.nlp._
 import cc.factorie._
-import cc.factorie.app.nlp.pos.PennPosTag
+import cc.factorie.app.nlp.pos.{CtbPosTag, PennPosTag}
 import scala.collection.mutable.{HashMap, ArrayBuffer}
 import scala.util.parsing.json.JSON
 import scala.annotation.tailrec

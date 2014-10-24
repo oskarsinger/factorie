@@ -30,7 +30,7 @@ import scala.Some
 import scala.Some
 
 /** Default transition-based dependency parser. */
-class TransitionBasedParser extends DocumentAnnotator {
+class CtbTransitionBasedParser extends DocumentAnnotator {
   private val logger = Logger.getLogger(this.getClass.getName)
 
   def this(stream:InputStream) = { this(); deserialize(stream) }
@@ -230,8 +230,8 @@ class TransitionBasedParser extends DocumentAnnotator {
 
   // For DocumentAnnotator trait
   def process(doc: Document) = { doc.sentences.foreach(process); doc }
-  def prereqAttrs = Seq(classOf[Sentence], classOf[PennPosTag], classOf[lemma.WordNetTokenLemma]) // Sentence also includes Token
-  def postAttrs = Seq(classOf[ParseTree])
+  def prereqAttrs = Seq(classOf[Sentence], classOf[CtbPosTag]) // Sentence also includes Token
+  def postAttrs = Seq(classOf[CtbParseTree])
   override def tokenAnnotationString(token:Token): String = {
     val sentence = token.sentence
     val pt = if (sentence ne null) sentence.attr[ParseTree] else null
