@@ -14,7 +14,7 @@ package cc.factorie.app.nlp.parse
 
 import cc.factorie.app.nlp._
 import cc.factorie._
-import cc.factorie.app.nlp.pos.{CtbPosTag, PennPosTag}
+import cc.factorie.app.nlp.pos.CtbPosTag
 import scala.collection.mutable.{HashMap, ArrayBuffer}
 import scala.util.parsing.json.JSON
 import scala.annotation.tailrec
@@ -30,7 +30,7 @@ import scala.Some
 import scala.Some
 
 /** Default transition-based dependency parser. */
-class TransitionBasedParser extends DocumentAnnotator {
+class ChineseTransitionBasedParser extends DocumentAnnotator {
   private val logger = Logger.getLogger(this.getClass.getName)
 
   def this(stream:InputStream) = { this(); deserialize(stream) }
@@ -171,8 +171,8 @@ class TransitionBasedParser extends DocumentAnnotator {
     }
     val totalTokens = testSentences.map(_.length).sum
     val totalSentences = testSentences.size
-    val pred = testSentences.map(_.attr[ParseTree])
-    (ParserEval.calcLas(pred), ParserEval.calcUas(pred), totalTokens*1000.0/totalTime, totalSentences*1000.0/totalTime)
+    val pred = testSentences.map(_.attr[CtbParseTree])
+    (CtbParserEval.calcLas(pred), CtbParserEval.calcUas(pred), totalTokens*1000.0/totalTime, totalSentences*1000.0/totalTime)
   }
 
 
@@ -230,21 +230,21 @@ class TransitionBasedParser extends DocumentAnnotator {
 
   // For DocumentAnnotator trait
   def process(doc: Document) = { doc.sentences.foreach(process); doc }
-  def prereqAttrs = Seq(classOf[Sentence], classOf[PennPosTag], classOf[lemma.WordNetTokenLemma]) // Sentence also includes Token
-  def postAttrs = Seq(classOf[ParseTree])
+  def prereqAttrs = Seq(classOf[Sentence], classOf[CtbPosTag]) // Sentence also includes Token
+  def postAttrs = Seq(classOf[CtbParseTree])
   override def tokenAnnotationString(token:Token): String = {
     val sentence = token.sentence
-    val pt = if (sentence ne null) sentence.attr[ParseTree] else null
+    val pt = if (sentence ne null) sentence.attr[CtbParseTree] else null
     if (pt eq null) "_\t_"
     else (pt.parentIndex(token.positionInSentence)+1).toString+"\t"+pt.label(token.positionInSentence).categoryValue
   }
   //override def tokenAnnotationString(token:Token): String = { val parse = token.parseParent; if (parse ne null) parse.positionInSentence+"\t"+token.parseLabel.categoryValue else "_\t_" }
 
   def process(s: Sentence): Sentence = {
-    val parse = s.attr.getOrElseUpdate(new ParseTree(s))
+    val parse = s.attr.getOrElseUpdate(new CtbParseTree(s))
     new NonProjectiveShiftReduce(predict = classify).parse(s).zipWithIndex.map(dt => {
       parse.setParent(dt._2, dt._1._1)
-      parse.label(dt._2).set(ParseTreeLabelDomain.index(dt._1._2))(null)
+      parse.label(dt._2).set(CtbParseTreeLabelDomain.index(dt._1._2))(null)
     })
     s
   }
@@ -627,11 +627,8 @@ class TransitionBasedParser extends DocumentAnnotator {
   }
 }
 
-class WSJTransitionBasedParser(url:java.net.URL) extends TransitionBasedParser(url)
-object WSJTransitionBasedParser extends WSJTransitionBasedParser(cc.factorie.util.ClasspathURL[WSJTransitionBasedParser](".factorie"))
-
-class OntonotesTransitionBasedParser(url:java.net.URL) extends TransitionBasedParser(url)
-object OntonotesTransitionBasedParser extends OntonotesTransitionBasedParser(cc.factorie.util.ClasspathURL[OntonotesTransitionBasedParser](".factorie"))
+class CtbTransitionBasedParser(url:java.net.URL) extends TransitionBasedParser
+object CtbTransitionBasedParser extends CtbTransitionBasedParser(cc.factorie.util.ClasspathURL[CtbTransitionBasedParser](".factorie"))
 
 class TransitionBasedParserArgs extends cc.factorie.util.DefaultCmdOptions with SharedNLPCmdOptions{
   val trainFiles =  new CmdOption("train", Nil.asInstanceOf[List[String]], "FILENAME...", "")
@@ -764,7 +761,7 @@ object TransitionBasedParserTrainer extends cc.factorie.util.HyperparameterMain 
       d.deserialize(new java.io.File(modelUrl))
       testSingle(d, testSentences, "Post serialization accuracy ")
     }
-    val testLAS = ParserEval.calcLas(testSentences.map(_.attr[ParseTree]))
+    val testLAS = CtbParserEval.calcLas(testSentences.map(_.attr[CtbParseTree]))
     if(opts.targetAccuracy.wasInvoked) cc.factorie.assertMinimalAccuracy(testLAS,opts.targetAccuracy.value.toDouble)
 
     testLAS
