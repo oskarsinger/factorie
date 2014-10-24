@@ -16,8 +16,8 @@ import cc.factorie.app.nlp._
 
 
 import scala.io.Source
-import cc.factorie.app.nlp.pos.PennPosTag
-import cc.factorie.app.nlp.parse.ParseTree
+import cc.factorie.app.nlp.pos.CtbPosTag
+import cc.factorie.app.nlp.parse.CtbParseTree
 import cc.factorie.app.nlp.lemma.TokenLemma
 
 import java.io.PrintWriter
@@ -31,9 +31,9 @@ import java.io.PrintWriter
  */
 
 
-object LoadConll2008 {
+object LoadConllChinese2009 {
   private def addDepInfo(s: Sentence, depInfoSeq: Seq[(Int,Int,String)]): Unit = {
-    val tree = new ParseTree(s)
+    val tree = new CtbParseTree(s)
     for ((childIdx, parentIdx, depLabel) <- depInfoSeq) {
       tree.setParent(childIdx, parentIdx)
       tree.label(childIdx).setCategory(depLabel)(null)
@@ -47,8 +47,8 @@ object LoadConll2008 {
     var document: Document = new Document
     document.annotators(classOf[Token]) = UnknownDocumentAnnotator.getClass // register that we have token boundaries
     document.annotators(classOf[Sentence]) = UnknownDocumentAnnotator.getClass // register that we have sentence boundaries
-    document.annotators(classOf[pos.PennPosTag]) = UnknownDocumentAnnotator.getClass // register that we have POS tags
-    if (loadLemma) document.annotators(classOf[TokenLemma]) = UnknownDocumentAnnotator.getClass // register that we have lemma
+    document.annotators(classOf[CtbPosTag]) = UnknownDocumentAnnotator.getClass // register that we have POS tags
+    if (loadLemma) document.annotators(classOf[TokenLemma]) = UnknownDocumentAnnotator.getClass
     val source = Source.fromFile(filename)
     var sentence: Sentence = new Sentence(document)
     var depInfoSeq = new collection.mutable.ArrayBuffer[(Int,Int,String)]
@@ -71,7 +71,7 @@ object LoadConll2008 {
         val depLabel = fields(9)
         document.appendString(" ")
         val token = new Token(sentence, word)
-        token.attr += new PennPosTag(token, partOfSpeech) // TODO Change this to PennPosTag
+        token.attr += new CtbPosTag(token, partOfSpeech) // TODO Change this to PennPosTag
         if (loadLemma)
           token.attr += new TokenLemma(token, lemma) // TODO Change this to some more specific TokenLemma subclass
         depInfoSeq.append((currTokenIdx, parentIdx, depLabel))
@@ -86,7 +86,7 @@ object LoadConll2008 {
 
   def printDocument(d: Document) =
     for (s <- d.sentences)
-      println(s.attr[ParseTree].toString() + "\n")
+      println(s.attr[CtbParseTree].toString() + "\n")
 
   def main(args: Array[String]) =
     for (filename <- args)
@@ -95,7 +95,7 @@ object LoadConll2008 {
 }
 
 
-object WriteConll2008 {
+object WriteConllChinese2009 {
 
   // if the source file is given, then include the fields that we don't know anything about
   // otherwise just give underscores for info we don't know.
@@ -105,7 +105,7 @@ object WriteConll2008 {
     val writer = new PrintWriter(outputFile)
     var sentence: Sentence = sentences.next()
     var currTokenIdx = 0
-    var tree: ParseTree = sentence.parse
+    var tree: CtbParseTree = sentence.ctbParse
     while (true) {
       if (currTokenIdx == sentence.length) {
         writer.println()
@@ -115,7 +115,7 @@ object WriteConll2008 {
             case _ => ()
           }
           sentence = sentences.next()
-          tree = sentence.parse
+          tree = sentence.ctbParse
           currTokenIdx = 0
         }
         else {
