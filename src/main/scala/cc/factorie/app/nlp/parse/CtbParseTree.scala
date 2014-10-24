@@ -32,7 +32,7 @@ object CtbParseTreeLabelDomain extends EnumDomain {
   def defaultCategory = "nn"
 }
 // TODO I think this should instead be "ParseEdgeLabels extends LabeledCategoricalSeqVariable". -akm
-class CtbParseTreeLabel(val tree:ParseTree, targetValue:String = CtbParseTreeLabelDomain.defaultCategory) extends LabeledCategoricalVariable(targetValue) { def domain = CtbParseTreeLabelDomain }
+class CtbParseTreeLabel(val tree:CtbParseTree, targetValue:String = CtbParseTreeLabelDomain.defaultCategory) extends LabeledCategoricalVariable(targetValue) { def domain = CtbParseTreeLabelDomain }
 
 object CtbParseTree {
   val rootIndex = -1
@@ -41,7 +41,7 @@ object CtbParseTree {
 
 // TODO This initialization is really inefficient.  Fix it. -akm
 class CtbParseTree(val sentence:Sentence, theTargetParents:Seq[Int], theTargetLabels:Seq[String]) {
-  def this(sentence:Sentence) = this(sentence, Array.fill[Int](sentence.length)(CtbParseTree.noIndex), Array.tabulate(sentence.length)(i => ParseTreeLabelDomain.defaultCategory)) // Note: this puts in dummy target data which may be confusing
+  def this(sentence:Sentence) = this(sentence, Array.fill[Int](sentence.length)(CtbParseTree.noIndex), Array.tabulate(sentence.length)(i => CtbParseTreeLabelDomain.defaultCategory)) // Note: this puts in dummy target data which may be confusing
   val _labels = theTargetLabels.map(s => new CtbParseTreeLabel(this, s)).toArray
   val _parents = theTargetParents.toArray
   val _targetParents = theTargetParents.toArray

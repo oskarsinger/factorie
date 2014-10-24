@@ -12,8 +12,8 @@
    limitations under the License. */
 package cc.factorie.app.nlp.parse
 
-object ParserEval {
-  def calcUas(trees: Iterable[ParseTree], includePunct: Boolean = false): Double = {
+object CtbParserEval {
+  def calcUas(trees: Iterable[CtbParseTree], includePunct: Boolean = false): Double = {
     var correct = 0.0
     var total = 0.0
     for (tree <- trees) {
@@ -27,7 +27,7 @@ object ParserEval {
     correct / total
   }
   
-  def calcLas(trees: Iterable[ParseTree], includePunct: Boolean = false): Double = {
+  def calcLas(trees: Iterable[CtbParseTree], includePunct: Boolean = false): Double = {
     var correct = 0.0
     var total = 0.0
     for (tree <- trees) {
