@@ -659,21 +659,11 @@ object CtbTransitionBasedParserTrainer extends cc.factorie.util.HyperparameterMa
     implicit val random = new scala.util.Random(0)
     opts.parse(args)
 
-    assert(opts.trainFiles.wasInvoked || opts.trainDir.wasInvoked)
+    assert(opts.trainFiles.wasInvoked)
     
     // Load the sentences
     def loadSentences(listOpt: opts.CmdOption[List[String]], dirOpt: opts.CmdOption[String]): Seq[Sentence] = {
-      var fileList = Seq.empty[String]
-      if (listOpt.wasInvoked) fileList = listOpt.value.toSeq
-      if (dirOpt.wasInvoked) fileList ++= FileUtils.getFileListFromDir(dirOpt.value)
-      fileList.flatMap(fname => {
-        if(opts.wsj.value)
-          load.LoadWSJMalt.fromFilename(fname, loadPos=load.AnnotationTypes.AUTO).head.sentences.toSeq 
-        else if (opts.ontonotes.value)
-          load.LoadOntonotes5.fromFilename(fname, loadLemma=load.AnnotationTypes.AUTO, loadPos=load.AnnotationTypes.AUTO).head.sentences.toSeq 
-        else
-          load.LoadConll2008.fromFilename(fname).head.sentences.toSeq 
-      })
+      listOpt.value.flatMap(fileName => load.LoadConllChinese2009.fromFilename(fileName).head.sentences.toSeq)
     }
 
     val sentencesFull = loadSentences(opts.trainFiles, opts.trainDir)
