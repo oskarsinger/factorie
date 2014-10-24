@@ -630,7 +630,7 @@ class ChineseTransitionBasedParser extends DocumentAnnotator {
 class CtbTransitionBasedParser(url:java.net.URL) extends TransitionBasedParser
 object CtbTransitionBasedParser extends CtbTransitionBasedParser(cc.factorie.util.ClasspathURL[CtbTransitionBasedParser](".factorie"))
 
-class TransitionBasedParserArgs extends cc.factorie.util.DefaultCmdOptions with SharedNLPCmdOptions{
+class CtbTransitionBasedParserArgs extends cc.factorie.util.DefaultCmdOptions with SharedNLPCmdOptions{
   val trainFiles =  new CmdOption("train", Nil.asInstanceOf[List[String]], "FILENAME...", "")
   val testFiles =  new CmdOption("test", Nil.asInstanceOf[List[String]], "FILENAME...", "")
   val trainDir = new CmdOption("trainDir", "", "FILENAME", "Directory containing training files.")
@@ -653,7 +653,7 @@ class TransitionBasedParserArgs extends cc.factorie.util.DefaultCmdOptions with 
   val delta = new CmdOption("delta", 0.1,"FLOAT","learning rate decay")
 }
 
-object TransitionBasedParserTrainer extends cc.factorie.util.HyperparameterMain {
+object CtbTransitionBasedParserTrainer extends cc.factorie.util.HyperparameterMain {
   def evaluateParameters(args: Array[String]) = {
     val opts = new TransitionBasedParserArgs
     implicit val random = new scala.util.Random(0)
@@ -768,7 +768,7 @@ object TransitionBasedParserTrainer extends cc.factorie.util.HyperparameterMain 
   }
 }
 
-object TransitionBasedParserTester {
+object CtbTransitionBasedParserTester {
   def main(args: Array[String]) {
 	val opts = new TransitionBasedParserArgs
 	opts.parse(args)
@@ -800,7 +800,7 @@ object TransitionBasedParserTester {
   }
 }
 
-object TransitionBasedParserOptimizer {
+object CtbTransitionBasedParserOptimizer {
   def main(args: Array[String]) {
     val opts = new TransitionBasedParserArgs
     opts.parse(args)
