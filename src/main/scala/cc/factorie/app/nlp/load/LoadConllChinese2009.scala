@@ -71,7 +71,11 @@ object LoadConllChinese2009 {
         val depLabel = fields(9)
         document.appendString(" ")
         val token = new Token(sentence, word)
-        token.attr += new CtbPosTag(token, partOfSpeech) // TODO Change this to PennPosTag
+        try {
+          token.attr += new CtbPosTag(token, partOfSpeech)
+        } catch{
+          case e: Error => {println(partOfSpeech); token.attr += new CtbPosTag(token, "NN")}
+        }
         if (loadLemma)
           token.attr += new TokenLemma(token, lemma) // TODO Change this to some more specific TokenLemma subclass
         depInfoSeq.append((currTokenIdx, parentIdx, depLabel))
