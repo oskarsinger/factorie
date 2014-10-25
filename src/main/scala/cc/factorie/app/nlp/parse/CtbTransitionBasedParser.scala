@@ -655,7 +655,7 @@ class CtbTransitionBasedParserArgs extends cc.factorie.util.DefaultCmdOptions wi
 
 object CtbTransitionBasedParserTrainer extends cc.factorie.util.HyperparameterMain {
   def evaluateParameters(args: Array[String]) = {
-    val opts = new TransitionBasedParserArgs
+    val opts = new CtbTransitionBasedParserArgs
     implicit val random = new scala.util.Random(0)
     opts.parse(args)
 
