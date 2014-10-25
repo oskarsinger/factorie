@@ -35,8 +35,17 @@ object LoadConllChinese2009 {
   private def addDepInfo(s: Sentence, depInfoSeq: Seq[(Int,Int,String)]): Unit = {
     val tree = new CtbParseTree(s)
     for ((childIdx, parentIdx, depLabel) <- depInfoSeq) {
-      tree.setParent(childIdx, parentIdx)
-      tree.label(childIdx).setCategory(depLabel)(null)
+      var x = childIdx
+      try {
+        tree.setParent(childIdx, parentIdx)
+      } catch {
+        case e: Error => {println(childIdx + "\t" + parentIdx); tree.setParent(1,1); x = 1}
+      }
+      try {
+        tree.label(childIdx).setCategory(depLabel)(null)
+      } catch {
+        case e: Error => {println(depLabel); tree.label(x).setCategory("acomp")(null)}
+      }
     }
     s.attr += tree
   }
@@ -78,15 +87,13 @@ object LoadConllChinese2009 {
         }
         if (loadLemma)
           token.attr += new TokenLemma(token, lemma) // TODO Change this to some more specific TokenLemma subclass
-        try {
+
           depInfoSeq.append((currTokenIdx, parentIdx, depLabel))
-        } catch {
-          case e: Error => {println(currTokenIdx + "\t" + parentIdx + "\t" + depLabel); depInfoSeq.append((1,1,"acomp"))}
-        }
+
       }
     }
     if (sentence ne null)
-      addDepInfo(sentence, depInfoSeq)
+        addDepInfo(sentence, depInfoSeq)
 
     println("Loaded 1 document with "+document.sentences.size+" sentences with "+document.asSection.length+" tokens total from file "+filename)
     Seq(document)
