@@ -66,9 +66,9 @@ object LoadConllChinese2009 {
         val currTokenIdx = fields(0).toInt - 1
         val word = fields(1)
         val lemma = fields(2)
-        val partOfSpeech = fields(3)
+        val partOfSpeech = fields(4)
         val parentIdx = fields(8).toInt - 1
-        val depLabel = fields(9)
+        val depLabel = fields(10).toLowerCase
         document.appendString(" ")
         val token = new Token(sentence, word)
         try {
@@ -78,7 +78,11 @@ object LoadConllChinese2009 {
         }
         if (loadLemma)
           token.attr += new TokenLemma(token, lemma) // TODO Change this to some more specific TokenLemma subclass
-        depInfoSeq.append((currTokenIdx, parentIdx, depLabel))
+        try {
+          depInfoSeq.append((currTokenIdx, parentIdx, depLabel))
+        } catch {
+          case e: Error => {println(currTokenIdx + "\t" + parentIdx + "\t" + depLabel); depInfoSeq.append((1,1,"acomp"))}
+        }
       }
     }
     if (sentence ne null)
