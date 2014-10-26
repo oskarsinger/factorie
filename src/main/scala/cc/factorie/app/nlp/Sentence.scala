@@ -43,7 +43,7 @@ class Sentence(sec:Section, initialStart:Int, initialLength:Int) extends TokenSp
   // Parse attributes
   /** If this Sentence has a ParseTree, return it; otherwise return null. */
   def parse = attr[cc.factorie.app.nlp.parse.ParseTree]
-  def ctbParse = attr[cc.factorie.app.nlp.parse.CtbParseTree]
+  def chineseParse = attr[cc.factorie.app.nlp.parse.ChineseParseTree]
   /** Return the Token at the root of this Sentence's ParseTree. Will throw an exception if there is no ParseTree. */
   def parseRootChild: Token = attr[cc.factorie.app.nlp.parse.ParseTree].rootChild
 
