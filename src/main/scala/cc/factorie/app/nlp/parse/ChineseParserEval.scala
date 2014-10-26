@@ -12,13 +12,15 @@
    limitations under the License. */
 package cc.factorie.app.nlp.parse
 
+import cc.factorie.app.chineseStrings._
+
 object ChineseParserEval {
   def calcUas(trees: Iterable[ChineseParseTree], includePunct: Boolean = false): Double = {
     var correct = 0.0
     var total = 0.0
     for (tree <- trees) {
       for (i <- 0 until tree.sentence.length) {
-        if (includePunct || !tree.sentence.tokens(i).isPunctuation) {
+        if (includePunct || !isPunctuation(tree.sentence.tokens(i).string(0))) {
           total += 1
           if (tree._parents(i) == tree._targetParents(i)) correct += 1
         }
@@ -32,7 +34,7 @@ object ChineseParserEval {
     var total = 0.0
     for (tree <- trees) {
       for (i <- 0 until tree.sentence.length) {
-        if (includePunct || !tree.sentence.tokens(i).isPunctuation) {
+        if (includePunct || !isPunctuation(tree.sentence.tokens(i).string(0))) {
           total += 1
           if (tree._parents(i) == tree._targetParents(i) && tree._labels(i).valueIsTarget) correct += 1
         }
