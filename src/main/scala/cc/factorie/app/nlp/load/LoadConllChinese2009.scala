@@ -87,7 +87,11 @@ object LoadConllChinese2009 {
         val depLabel = fields(11).toLowerCase
         document.appendString(" ")
         val token = new Token(sentence, word)
-        token.attr += new CtbPosTag(token, filteredPOS)
+        try {
+          token.attr += new CtbPosTag(token, filteredPOS)
+        } catch {
+          case e: Error => {println(filteredPOS); token.attr += new CtbPosTag(token, "NN")}
+        }
         if (loadLemma)
           token.attr += new TokenLemma(token, lemma) // TODO Change this to some more specific TokenLemma subclass
 
