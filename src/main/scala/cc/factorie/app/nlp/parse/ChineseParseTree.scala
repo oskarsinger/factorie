@@ -191,8 +191,8 @@ class ChineseParseTree(val sentence:Sentence, theTargetParents:Seq[Int], theTarg
   //def label(childToken:Token): ParseTreeLabel = { require(childToken.sentence eq sentence); label(childToken.position - sentence.start) }
   override def toString: String = {
     val tokenStrings = {
-      if (sentence.tokens.forall(_.posTag ne null))
-        sentence.tokens.map(t => t.string + "/" + t.posTag.categoryValue)
+      if (sentence.tokens.forall(_.chinesePosTag ne null))
+        sentence.tokens.map(t => t.string + "/" + t.chinesePosTag.categoryValue)
       else
         sentence.tokens.map(_.string)
     }
