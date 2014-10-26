@@ -28,7 +28,7 @@ object CtbParseTreeLabelDomain extends EnumDomain {
   voc, cjtn2, app, amod, sbj, lgs = Value
   index("") // necessary for empty categories
   freeze()
-  def defaultCategory = "nn"
+  def defaultCategory = "unk"
 }
 // TODO I think this should instead be "ParseEdgeLabels extends LabeledCategoricalSeqVariable". -akm
 class CtbParseTreeLabel(val tree:CtbParseTree, targetValue:String = CtbParseTreeLabelDomain.defaultCategory) extends LabeledCategoricalVariable(targetValue) { def domain = CtbParseTreeLabelDomain }
