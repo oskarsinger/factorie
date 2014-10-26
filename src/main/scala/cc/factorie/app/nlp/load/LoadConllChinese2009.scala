@@ -35,17 +35,8 @@ object LoadConllChinese2009 {
   private def addDepInfo(s: Sentence, depInfoSeq: Seq[(Int,Int,String)]): Unit = {
     val tree = new ChineseParseTree(s)
     for ((childIdx, parentIdx, depLabel) <- depInfoSeq) {
-      var x = childIdx
-      try {
-        tree.setParent(childIdx, parentIdx)
-      } catch {
-        case e: Error => {println(childIdx + "\t" + parentIdx); tree.setParent(1,1); x = 1}
-      }
-      try {
-        tree.label(childIdx).setCategory(depLabel)(null)
-      } catch {
-        case e: Error => {println(depLabel); tree.label(x).setCategory("unk")(null)}
-      }
+      tree.setParent(childIdx, parentIdx)
+      tree.label(childIdx).setCategory(depLabel)(null)
     }
     s.attr += tree
   }
@@ -88,7 +79,7 @@ object LoadConllChinese2009 {
             case _ => partOfSpeech
           }
         val parentIdx = fields(8).toInt - 1
-        val depLabel = fields(10).toLowerCase
+        val depLabel = fields(10)
         document.appendString(" ")
         val token = new Token(sentence, word)
         token.attr += new CtbPosTag(token, filteredPOS)
