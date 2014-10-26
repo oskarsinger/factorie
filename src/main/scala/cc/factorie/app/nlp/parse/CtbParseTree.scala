@@ -23,10 +23,9 @@ import cc.factorie.variable.{LabeledCategoricalVariable, EnumDomain}
 
 // TODO I think this should instead be "ParseEdgeLabelDomain". -akm
 object CtbParseTreeLabelDomain extends EnumDomain {
-  val acomp, advcl, advmod, agent, amod, appos, attr, aux, auxpass, cc, ccomp, complm, conj, csubj, csubjpass, 
-  dep, det, dobj, expl, hmod, hyph, infmod, intj, iobj, mark, meta, neg, nmod, nn, npadvmod, nsubj, nsubjpass, 
-  num, number, oprd, parataxis, partmod, pcomp, pobj, poss, possessive, preconj, predet, prep, prt, punct, 
-  quantmod, rcmod, root, xcomp = Value
+  val tmp, loc, ext, ccjin, dir, prd, mnr, nmod, prt, prp, cjtn8, cjtn9, relc, cjtn7, cjtn4, cjtn5,
+  root, cjtn3, cjtn0, cjtn1, adv, obj, comp, cjtn6, cnd, other, io, foc, aux, unk, bnf, cjt, dmod,
+  voc, cjtn2, app, amod, sbj, lgs = Value
   index("") // necessary for empty categories
   freeze()
   def defaultCategory = "nn"
