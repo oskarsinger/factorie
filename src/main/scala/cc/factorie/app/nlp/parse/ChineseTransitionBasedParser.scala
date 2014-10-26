@@ -327,27 +327,7 @@ class ChineseTransitionBasedParser extends DocumentAnnotator {
     def predict(state: ParseDecisionVariable): ParseDecision
 
     var instances = new ArrayBuffer[ParseDecisionVariable] { override val initialSize = 100 }
-    def getSimpleDepArcs = {
-      var parentLabelPairs: Array[(Int, String)] = null
-      try {
-        val parse = sentence.chineseParse
-        //println("Parse:\t" + parse.toString)
-        val targetParents = parse.targetParents
-        //println("targetParents:\t" + targetParents.toString)
-        val shiftedTargetParents = targetParents.map(_ + 1)
-        //println("shiftedTargetParents:\t" + shiftedTargetParents.toString)
-        val labels = parse.labels
-        //println("labels:\t" + labels.toString)
-        val targetLabels = labels.map(_.target.value.category)
-        //println("targetLabels:\t" + targetLabels.toString)
-        parentLabelPairs = shiftedTargetParents.zip(targetLabels)
-        //println("parentLabelPairs:\t" + parentLabelPairs.toString)
-      } catch {
-        case e: NullPointerException => System.exit(1)
-      }
-
-      parentLabelPairs
-    }
+    def getSimpleDepArcs = sentence.chineseParse.targetParents.map(_ + 1).zip(sentence.chineseParse.labels.map(_.target.value.category))
     def getDepArcs = { Seq((-1, "<ROOT-ROOT>")) ++ getSimpleDepArcs.map { case (i: Int, l: String) => (i, l) } }
     val goldHeads = getDepArcs
 
@@ -606,20 +586,7 @@ class ChineseTransitionBasedParser extends DocumentAnnotator {
   case class DepArc(depToken: DepToken, label: String)
 
   class ParseState(var stack: Int, var input: Int, val reducedIds: collection.mutable.HashSet[Int], sentence: Sentence) {
-    private def depToken(token: Token, idx: Int, state: ParseState) = {
-
-      var depToken: DepToken = null
-      try {
-        println(token.string)
-        println(token.chinesePosTag.categoryValue)
-        println(token.lemmaString)
-        println(state.toString)
-        depToken = new DepToken(form = token.string, lemma = token.lemmaString, pos = token.chinesePosTag.categoryValue, thisIdx = idx, state = state)
-      } catch {
-        case e: NullPointerException => System.exit(1)
-      }
-      depToken
-    }
+    private def depToken(token: Token, idx: Int, state: ParseState) = new DepToken(form = token.string, lemma = token.lemmaString, pos = token.chinesePosTag.categoryValue, thisIdx = idx, state = state)
     val rootToken = new DepToken(form = "<ROOT>",  lemma = "<ROOT>", pos = "<ROOT>", thisIdx = 0, state=this)
     val nullToken = new DepToken(form = "<NULL>",  lemma = "<NULL>", pos = "<NULL>", thisIdx = -1, state=this)
     
