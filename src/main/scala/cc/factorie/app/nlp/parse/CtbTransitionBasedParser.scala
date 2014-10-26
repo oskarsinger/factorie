@@ -216,9 +216,9 @@ class ChineseTransitionBasedParser extends DocumentAnnotator {
 
   def generateDecisions(ss: Iterable[Sentence], mode: Int, nThreads: Int): Iterable[ParseDecisionVariable] = {
     val decs = cc.factorie.util.Threading.parMap(ss, nThreads)(s => {
-      val oracle: NonProjectiveOracle = {
-        if (mode == ParserConstants.TRAINING) new NonprojectiveGoldOracle(s)
-        else new NonprojectiveBoostingOracle(s, classify)
+      val oracle: CtbNonProjectiveOracle = {
+        if (mode == ParserConstants.TRAINING) new CtbNonprojectiveGoldOracle(s)
+        else new CtbNonprojectiveBoostingOracle(s, classify)
       }
       new NonProjectiveShiftReduce(oracle.predict).parse(s)
       oracle.instances.toSeq
@@ -321,7 +321,7 @@ class ChineseTransitionBasedParser extends DocumentAnnotator {
     private def rightPass(label: String, state: ParseState)  { rightArc(label, state); pass(state)   }
   }
 
-  trait NonProjectiveOracle {
+  trait CtbNonProjectiveOracle {
     import ParserConstants._
     val sentence: Sentence
     def predict(state: ParseDecisionVariable): ParseDecision
@@ -397,7 +397,7 @@ class ChineseTransitionBasedParser extends DocumentAnnotator {
     }
   }
 
-  class NonprojectiveGoldOracle(val sentence: Sentence) extends NonProjectiveOracle {
+  class CtbNonprojectiveGoldOracle(val sentence: Sentence) extends CtbNonProjectiveOracle {
     def predict(decisionVariable: ParseDecisionVariable): ParseDecision = {
       val decision = getGoldDecision(decisionVariable.state)
       instances += new ParseDecisionVariable(decision, decisionVariable.state)
@@ -405,7 +405,7 @@ class ChineseTransitionBasedParser extends DocumentAnnotator {
     }
   }
 
-  class NonprojectiveBoostingOracle(val sentence: Sentence, basePredict: ParseDecisionVariable => ParseDecision) extends NonProjectiveOracle {
+  class CtbNonprojectiveBoostingOracle(val sentence: Sentence, basePredict: ParseDecisionVariable => ParseDecision) extends CtbNonProjectiveOracle {
     def predict(decisionVariable: ParseDecisionVariable): ParseDecision = {
       val label = new ParseDecisionVariable(getGoldDecision(decisionVariable.state), decisionVariable.state)
       instances += label

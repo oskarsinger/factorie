@@ -327,27 +327,7 @@ class TransitionBasedParser extends DocumentAnnotator {
     def predict(state: ParseDecisionVariable): ParseDecision
 
     var instances = new ArrayBuffer[ParseDecisionVariable] { override val initialSize = 100 }
-    def getSimpleDepArcs = {
-      var parentLabelPairs: Array[(Int, String)] = null
-      try {
-        val parse = sentence.parse
-        println("Parse:\t" + parse.toString)
-        val targetParents = parse.targetParents
-        println("targetParents:\t" + targetParents.toString)
-        val shiftedTargetParents = targetParents.map(_ + 1)
-        println("shiftedTargetParents:\t" + shiftedTargetParents.toString)
-        val labels = parse.labels
-        println("labels:\t" + labels.toString)
-        val targetLabels = labels.map(_.target.value.category)
-        println("targetLabels:\t" + targetLabels.toString)
-        parentLabelPairs = shiftedTargetParents.zip(targetLabels)
-        println("parentLabelPairs:\t" + parentLabelPairs.toString)
-      } catch {
-        case e: NullPointerException => System.exit(1)
-      }
-
-      parentLabelPairs
-    }
+    def getSimpleDepArcs = sentence.parse.targetParents.map(_ + 1).zip(sentence.parse.labels.map(_.target.value.category))
     def getDepArcs = { Seq((-1, "<ROOT-ROOT>")) ++ getSimpleDepArcs.map { case (i: Int, l: String) => (i, l) } }
     val goldHeads = getDepArcs
 
