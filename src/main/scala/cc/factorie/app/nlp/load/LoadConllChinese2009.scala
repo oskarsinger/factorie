@@ -17,7 +17,7 @@ import cc.factorie.app.nlp._
 
 import scala.io.Source
 import cc.factorie.app.nlp.pos.CtbPosTag
-import cc.factorie.app.nlp.parse.CtbParseTree
+import cc.factorie.app.nlp.parse.ChineseParseTree
 import cc.factorie.app.nlp.lemma.TokenLemma
 
 import java.io.PrintWriter
@@ -33,7 +33,7 @@ import java.io.PrintWriter
 
 object LoadConllChinese2009 {
   private def addDepInfo(s: Sentence, depInfoSeq: Seq[(Int,Int,String)]): Unit = {
-    val tree = new CtbParseTree(s)
+    val tree = new ChineseParseTree(s)
     for ((childIdx, parentIdx, depLabel) <- depInfoSeq) {
       var x = childIdx
       try {
@@ -105,7 +105,7 @@ object LoadConllChinese2009 {
 
   def printDocument(d: Document) =
     for (s <- d.sentences)
-      println(s.attr[CtbParseTree].toString() + "\n")
+      println(s.attr[ChineseParseTree].toString() + "\n")
 
   def main(args: Array[String]) =
     for (filename <- args)
@@ -124,7 +124,7 @@ object WriteConllChinese2009 {
     val writer = new PrintWriter(outputFile)
     var sentence: Sentence = sentences.next()
     var currTokenIdx = 0
-    var tree: CtbParseTree = sentence.ctbParse
+    var tree: ChineseParseTree = sentence.chineseParse
     while (true) {
       if (currTokenIdx == sentence.length) {
         writer.println()
@@ -134,7 +134,7 @@ object WriteConllChinese2009 {
             case _ => ()
           }
           sentence = sentences.next()
-          tree = sentence.ctbParse
+          tree = sentence.chineseParse
           currTokenIdx = 0
         }
         else {
