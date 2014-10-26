@@ -787,22 +787,15 @@ object ChineseTransitionBasedParserTester {
 	// load model from file if given,
 	// else if the wsj command line param was specified use wsj model,
 	// otherwise ontonotes model
-	val parser = {
-	  if(opts.modelDir.wasInvoked) new ChineseTransitionBasedParser(new File(opts.modelDir.value))
-	}
+	val parser = new ChineseTransitionBasedParser(new File(opts.modelDir.value))
 	
 	assert(!(opts.testDir.wasInvoked && opts.testFiles.wasInvoked))
     val testFileList = if(opts.testDir.wasInvoked) FileUtils.getFileListFromDir(opts.testDir.value) else opts.testFiles.value.toSeq
   
 	val testPortionToTake =  if(opts.testPortion.wasInvoked) opts.testPortion.value else 1.0
-	val testDocs =  testFileList.map(fname => {
-	  if(opts.wsj.value)
-	    load.LoadWSJMalt.fromFilename(fname, loadLemma=load.AnnotationTypes.AUTO, loadPos=load.AnnotationTypes.AUTO).head
-	  else
-	    load.LoadOntonotes5.fromFilename(fname, loadLemma=load.AnnotationTypes.AUTO, loadPos=load.AnnotationTypes.AUTO).head
-	})
-    val testSentencesFull = testDocs.flatMap(_.sentences)
-    val testSentences = testSentencesFull.take((testPortionToTake*testSentencesFull.length).floor.toInt)
+	val testDocs =  testFileList.map(fname => load.LoadConllChinese2009.fromFilename(fname).head)
+  val testSentencesFull = testDocs.flatMap(_.sentences)
+  val testSentences = testSentencesFull.take((testPortionToTake*testSentencesFull.length).floor.toInt)
 
     println(parser.testString(testSentences))
   }
