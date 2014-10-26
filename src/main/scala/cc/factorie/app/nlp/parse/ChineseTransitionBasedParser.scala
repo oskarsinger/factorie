@@ -647,7 +647,7 @@ class ChineseTransitionBasedParser extends DocumentAnnotator {
   }
 }
 
-class CtbTransitionBasedParser(url:java.net.URL) extends TransitionBasedParser
+class CtbTransitionBasedParser(url:java.net.URL) extends ChineseTransitionBasedParser
 object CtbTransitionBasedParser extends CtbTransitionBasedParser(cc.factorie.util.ClasspathURL[CtbTransitionBasedParser](".factorie"))
 
 class ChineseTransitionBasedParserArgs extends cc.factorie.util.DefaultCmdOptions with SharedNLPCmdOptions{
