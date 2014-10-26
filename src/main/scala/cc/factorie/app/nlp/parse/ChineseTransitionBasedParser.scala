@@ -246,6 +246,7 @@ class ChineseTransitionBasedParser extends DocumentAnnotator {
       parse.setParent(dt._2, dt._1._1)
       parse.label(dt._2).set(ChineseParseTreeLabelDomain.index(dt._1._2))(null)
     })
+    println(s.chineseParse.toString)
     s
   }
   

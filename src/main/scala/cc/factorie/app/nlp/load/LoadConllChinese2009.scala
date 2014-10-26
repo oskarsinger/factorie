@@ -79,7 +79,7 @@ object LoadConllChinese2009 {
             case _ => partOfSpeech
           }
         val parentIdx = fields(8).toInt - 1
-        val depLabel = fields(10)
+        val depLabel = fields(10).toLowerCase
         document.appendString(" ")
         val token = new Token(sentence, word)
         token.attr += new CtbPosTag(token, filteredPOS)
