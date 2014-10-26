@@ -75,16 +75,19 @@ object LoadConllChinese2009 {
         val currTokenIdx = fields(0).toInt - 1
         val word = fields(1)
         val lemma = fields(2)
-        val partOfSpeech = fields(4)
+        val partOfSpeech = fields(5)
+        val filteredPOS =
+          partOfSpeech match {
+            case "VVADV" => "VV"
+            case "PUADV" => "PU"
+            case "SPADV" => "SP"
+            case _ => partOfSpeech
+          }
         val parentIdx = fields(8).toInt - 1
-        val depLabel = fields(10).toLowerCase
+        val depLabel = fields(11).toLowerCase
         document.appendString(" ")
         val token = new Token(sentence, word)
-        try {
-          token.attr += new CtbPosTag(token, partOfSpeech)
-        } catch{
-          case e: Error => {println(partOfSpeech); token.attr += new CtbPosTag(token, "NN")}
-        }
+        token.attr += new CtbPosTag(token, filteredPOS)
         if (loadLemma)
           token.attr += new TokenLemma(token, lemma) // TODO Change this to some more specific TokenLemma subclass
 
