@@ -611,10 +611,10 @@ class ChineseTransitionBasedParser extends DocumentAnnotator {
       var depToken: DepToken = null
       try {
         println(token.string)
-        println(token.posTag.categoryValue)
+        println(token.chinesePosTag.categoryValue)
         println(token.lemmaString)
         println(state.toString)
-        depToken = new DepToken(form = token.string, lemma = token.lemmaString, pos = token.posTag.categoryValue, thisIdx = idx, state = state)
+        depToken = new DepToken(form = token.string, lemma = token.lemmaString, pos = token.chinesePosTag.categoryValue, thisIdx = idx, state = state)
       } catch {
         case e: NullPointerException => System.exit(1)
       }

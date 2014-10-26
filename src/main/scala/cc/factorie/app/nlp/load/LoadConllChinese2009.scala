@@ -150,7 +150,7 @@ object WriteConllChinese2009 {
             val x = Array.fill[String](10)("_")
             x(0) = "" + (currTokenIdx + 1)
             x(1) = sentence.tokens(currTokenIdx).string
-            x(3) = sentence.tokens(currTokenIdx).posTag.categoryValue
+            x(3) = sentence.tokens(currTokenIdx).chinesePosTag.categoryValue
             x(8) = field8
             x(9) = field9
             x
