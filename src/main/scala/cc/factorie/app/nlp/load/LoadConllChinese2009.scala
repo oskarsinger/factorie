@@ -44,7 +44,7 @@ object LoadConllChinese2009 {
       try {
         tree.label(childIdx).setCategory(depLabel)(null)
       } catch {
-        case e: Error => {println(depLabel); tree.label(x).setCategory("acomp")(null)}
+        case e: Error => {println(depLabel); tree.label(x).setCategory("unk")(null)}
       }
     }
     s.attr += tree
