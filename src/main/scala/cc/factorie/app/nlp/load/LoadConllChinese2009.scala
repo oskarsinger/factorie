@@ -75,7 +75,7 @@ object LoadConllChinese2009 {
         val currTokenIdx = fields(0).toInt - 1
         val word = fields(1)
         val lemma = fields(2)
-        val partOfSpeech = fields(5)
+        val partOfSpeech = fields(4)
         val filteredPOS =
           partOfSpeech match {
             case "VVADV" => "VV"
@@ -85,7 +85,7 @@ object LoadConllChinese2009 {
             case _ => partOfSpeech
           }
         val parentIdx = fields(8).toInt - 1
-        val depLabel = fields(11).toLowerCase
+        val depLabel = fields(10).toLowerCase
         document.appendString(" ")
         val token = new Token(sentence, word)
         token.attr += new CtbPosTag(token, filteredPOS)
@@ -150,15 +150,15 @@ object WriteConllChinese2009 {
             val x = Array.fill[String](10)("_")
             x(0) = "" + (currTokenIdx + 1)
             x(1) = sentence.tokens(currTokenIdx).string
-            x(3) = sentence.tokens(currTokenIdx).chinesePosTag.categoryValue
+            x(4) = sentence.tokens(currTokenIdx).chinesePosTag.categoryValue
             x(8) = field8
-            x(9) = field9
+            x(10) = field9
             x
           }
           case Some(source) => {
             val x = source.next().split("\t")
             x(8) = field8
-            x(9) = field9
+            x(10) = field9
             x
           }
         }
