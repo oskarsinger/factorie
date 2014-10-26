@@ -82,6 +82,9 @@ object LoadConllChinese2009 {
             case "PUADV" => "PU"
             case "SPADV" => "SP"
             case "ADADV" => "AD"
+            case "NNADV" => "NN"
+            case "NRADV" => "NR"
+            case "IJADV" => "IJ"
             case _ => partOfSpeech
           }
         val parentIdx = fields(8).toInt - 1
