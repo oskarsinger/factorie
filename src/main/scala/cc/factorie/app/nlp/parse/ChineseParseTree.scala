@@ -29,6 +29,7 @@ object ChineseParseTreeLabelDomain extends EnumDomain {
   index("") // necessary for empty categories
   freeze()
   def defaultCategory = "unk"
+  def defaultIndex = index(defaultCategory)
 }
 // TODO I think this should instead be "ParseEdgeLabels extends LabeledCategoricalSeqVariable". -akm
 class ChineseParseTreeLabel(val tree:ChineseParseTree, targetValue:String = ChineseParseTreeLabelDomain.defaultCategory) extends LabeledCategoricalVariable(targetValue) { def domain = ChineseParseTreeLabelDomain }
@@ -39,14 +40,19 @@ object ChineseParseTree {
 }
 
 // TODO This initialization is really inefficient.  Fix it. -akm
-class ChineseParseTree(val sentence:Sentence, theTargetParents:Seq[Int], theTargetLabels:Seq[String]) {
-  def this(sentence:Sentence) = this(sentence, Array.fill[Int](sentence.length)(ChineseParseTree.noIndex), Array.tabulate(sentence.length)(i => ChineseParseTreeLabelDomain.defaultCategory)) // Note: this puts in dummy target data which may be confusing
-  val _labels = theTargetLabels.map(s => new ChineseParseTreeLabel(this, s)).toArray
-  val _parents = theTargetParents.toArray
-  val _targetParents = theTargetParents.toArray
-  //println("ParseTree parents "+theTargetParents.mkString(" "))
-  //println(" ParseTree labels "+theTargetLabels.mkString(" "))
-  //println(" ParseTree labels "+_labels.map(_.categoryValue).mkString(" "))
+class ChineseParseTree(val sentence:Sentence, theTargetParents:Array[Int], theTargetLabels:Array[Int]) {
+  def this(sentence:Sentence) = this(sentence, Array.fill[Int](sentence.length)(ChineseParseTree.noIndex), Array.fill(sentence.length)(ChineseParseTreeLabelDomain.defaultIndex)) // Note: this puts in dummy target data which may be confusing
+  def this(sentence:Sentence, theTargetParents:Seq[Int], theTargetLabels:Seq[String]) = this(sentence, theTargetParents.toArray, theTargetLabels.map(c => ChineseParseTreeLabelDomain.index(c)).toArray)
+  def check(parents:Array[Int]): Unit = {
+    val l = parents.length; var i = 0; while (i < l) {
+      require(parents(i) < l)
+      i += 1
+    }
+  }
+  check(theTargetParents)
+  val _labels = theTargetLabels.map(s => new ChineseParseTreeLabel(this, ChineseParseTreeLabelDomain.category(s))).toArray
+  val _parents = { val p = new Array[Int](theTargetParents.length); System.arraycopy(theTargetParents, 0, p, 0, p.length); p }
+  val _targetParents = theTargetParents
   def labels: Array[ChineseParseTreeLabel] = _labels
   def parents: Array[Int] = _parents
   def targetParents: Array[Int] = _targetParents
