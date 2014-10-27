@@ -50,6 +50,7 @@ class Sentence(sec:Section, initialStart:Int, initialLength:Int) extends TokenSp
   // common labels
   /** Returns the sequence of PennPosTags attributed to the sequence of Tokens in this Sentence. */
   def posTags: IndexedSeq[pos.PennPosTag] = tokens.map(_.posTag)
+  def chinesePosTags: IndexedSeq[pos.CtbPosTag] = tokens.map(_.chinesePosTag)
   /** Returns the sequence of NerTags attributed to the sequence of Tokens in this Sentence. */
   def nerTags: IndexedSeq[ner.NerTag] = tokens.map(_.nerTag)
 }
