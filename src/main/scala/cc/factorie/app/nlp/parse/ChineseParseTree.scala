@@ -28,7 +28,7 @@ object ChineseParseTreeLabelDomain extends EnumDomain {
   voc, cjtn2, app, amod, sbj, lgs = Value
   index("") // necessary for empty categories
   freeze()
-  def defaultCategory = "amod"
+  def defaultCategory = "unk"
 }
 // TODO I think this should instead be "ParseEdgeLabels extends LabeledCategoricalSeqVariable". -akm
 class ChineseParseTreeLabel(val tree:ChineseParseTree, targetValue:String = ChineseParseTreeLabelDomain.defaultCategory) extends LabeledCategoricalVariable(targetValue) { def domain = ChineseParseTreeLabelDomain }
@@ -41,7 +41,7 @@ object ChineseParseTree {
 // TODO This initialization is really inefficient.  Fix it. -akm
 class ChineseParseTree(val sentence:Sentence, theTargetParents:Seq[Int], theTargetLabels:Seq[String]) {
   def this(sentence:Sentence) = this(sentence, Array.fill[Int](sentence.length)(ChineseParseTree.noIndex), Array.tabulate(sentence.length)(i => ChineseParseTreeLabelDomain.defaultCategory)) // Note: this puts in dummy target data which may be confusing
-  val _labels = theTargetLabels.map(s => new ChineseParseTreeLabel(this, s)).toArray
+  val _labels = theTargetLabels.map(s => {println(s); new ChineseParseTreeLabel(this, s)}).toArray
   val _parents = theTargetParents.toArray
   val _targetParents = theTargetParents.toArray
   //println("ParseTree parents "+theTargetParents.mkString(" "))
