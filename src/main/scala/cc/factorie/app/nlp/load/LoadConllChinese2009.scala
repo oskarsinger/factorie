@@ -37,7 +37,7 @@ object LoadConllChinese2009 {
     //println(depInfoSeq.map(_._3).mkString("\t"))
     for ((childIdx, parentIdx, depLabel) <- depInfoSeq) {
       tree.setParent(childIdx, parentIdx)
-      tree.label(childIdx).setCategory(depLabel)(null)
+      tree.label(childIdx).target.setCategory(depLabel)(null)
     }
     s.attr += tree
   }
