@@ -241,6 +241,9 @@ class ChineseTransitionBasedParser extends DocumentAnnotator {
   //override def tokenAnnotationString(token:Token): String = { val parse = token.parseParent; if (parse ne null) parse.positionInSentence+"\t"+token.parseLabel.categoryValue else "_\t_" }
 
   def process(s: Sentence): Sentence = {
+    val target = s.chineseParse.parents.map(_.toString).mkString("\t")
+    val inferred = s.chineseParse.parents.map(_.toString).mkString("\t")
+    println("TARGET:\t" + target + "\tINFERRED:\t" + inferred)
     val parse = s.attr.getOrElseUpdate(new ChineseParseTree(s))
     new NonProjectiveShiftReduce(predict = classify).parse(s).zipWithIndex.map(dt => {
       parse.setParent(dt._2, dt._1._1)
