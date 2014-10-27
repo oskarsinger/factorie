@@ -41,7 +41,7 @@ object ChineseParseTree {
 // TODO This initialization is really inefficient.  Fix it. -akm
 class ChineseParseTree(val sentence:Sentence, theTargetParents:Seq[Int], theTargetLabels:Seq[String]) {
   def this(sentence:Sentence) = this(sentence, Array.fill[Int](sentence.length)(ChineseParseTree.noIndex), Array.tabulate(sentence.length)(i => ChineseParseTreeLabelDomain.defaultCategory)) // Note: this puts in dummy target data which may be confusing
-  val _labels = theTargetLabels.map(s => {println(s); new ChineseParseTreeLabel(this, s)}).toArray
+  val _labels = theTargetLabels.map(s => new ChineseParseTreeLabel(this, s)).toArray
   val _parents = theTargetParents.toArray
   val _targetParents = theTargetParents.toArray
   //println("ParseTree parents "+theTargetParents.mkString(" "))
