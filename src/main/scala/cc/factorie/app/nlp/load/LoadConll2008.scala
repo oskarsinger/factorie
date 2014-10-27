@@ -35,8 +35,8 @@ object LoadConll2008 {
   private def addDepInfo(s: Sentence, depInfoSeq: Seq[(Int,Int,String)]): Unit = {
     val tree = new ParseTree(s)
     for ((childIdx, parentIdx, depLabel) <- depInfoSeq) {
-      tree.setParent(childIdx, parentIdx)
-      tree.label(childIdx).setCategory(depLabel)(null)
+      tree.setTargetParent(childIdx, parentIdx)
+      tree.label(childIdx).target.setCategory(depLabel)(null)
     }
     s.attr += tree
   }
@@ -68,7 +68,7 @@ object LoadConll2008 {
         val lemma = fields(2)
         val partOfSpeech = fields(3)
         val parentIdx = fields(8).toInt - 1
-        val depLabel = fields(9)
+        val depLabel = fields(9).toLowerCase
         document.appendString(" ")
         val token = new Token(sentence, word)
         token.attr += new PennPosTag(token, partOfSpeech) // TODO Change this to PennPosTag

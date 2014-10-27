@@ -241,20 +241,11 @@ class ChineseTransitionBasedParser extends DocumentAnnotator {
   //override def tokenAnnotationString(token:Token): String = { val parse = token.parseParent; if (parse ne null) parse.positionInSentence+"\t"+token.parseLabel.categoryValue else "_\t_" }
 
   def process(s: Sentence): Sentence = {
-    val beforeTarget = s.chineseParse.labels.map(_.target.categoryValue).mkString("\t")
-    val beforeInferred = s.chineseParse.labels.map(_.categoryValue).mkString("\t")
-    //println("BEFORE TARGET:\t" + beforeTarget + "\tBEFORE INFERRED:\t" + beforeInferred)
     val parse = s.attr.getOrElseUpdate(new ChineseParseTree(s))
-    val afterTarget = s.chineseParse.labels.map(_.target.categoryValue).mkString("\t")
-    val afterInferred = s.chineseParse.labels.map(_.categoryValue).mkString("\t")
-    //println("AFTER TARGET:\t" + afterTarget + "\tAFTER INFERRED:\t" + afterInferred)
     new NonProjectiveShiftReduce(predict = classify).parse(s).zipWithIndex.map(dt => {
       parse.setParent(dt._2, dt._1._1)
       parse.label(dt._2).set(ChineseParseTreeLabelDomain.index(dt._1._2))(null)
     })
-    val afterAfterTarget = s.chineseParse.labels.map(_.target.categoryValue).mkString("\t")
-    val afterAfterInferred = s.chineseParse.labels.map(_.categoryValue).mkString("\t")
-    //println("AFTERAFTER TARGET:\t" + afterAfterTarget + "\tAFTERAFTER INFERRED:\t" + afterAfterInferred)
     s
   }
   

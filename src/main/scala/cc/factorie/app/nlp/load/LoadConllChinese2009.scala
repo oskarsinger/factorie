@@ -34,9 +34,8 @@ import java.io.PrintWriter
 object LoadConllChinese2009 {
   private def addDepInfo(s: Sentence, depInfoSeq: Seq[(Int,Int,String)]): Unit = {
     val tree = new ChineseParseTree(s)
-    //println(depInfoSeq.map(_._3).mkString("\t"))
     for ((childIdx, parentIdx, depLabel) <- depInfoSeq) {
-      tree.setParent(childIdx, parentIdx)
+      tree.setTargetParent(childIdx, parentIdx)
       tree.label(childIdx).target.setCategory(depLabel)(null)
     }
     s.attr += tree
@@ -81,7 +80,6 @@ object LoadConllChinese2009 {
           }
         val parentIdx = fields(8).toInt - 1
         val depLabel = fields(10).toLowerCase
-        //print(depLabel+"\t")
         document.appendString(" ")
         val token = new Token(sentence, word)
         token.attr += new CtbPosTag(token, filteredPOS)
