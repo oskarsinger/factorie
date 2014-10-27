@@ -13,11 +13,13 @@
 package cc.factorie.app.nlp.hcoref
 
 import cc.factorie._
+import cc.factorie.app.strings
 import cc.factorie.model._
 import cc.factorie.variable._
 import scala.reflect.ClassTag
 import cc.factorie.la.{Tensor, Tensor1}
 import cc.factorie.Parameters
+import cc.factorie.util.VectorUtils
 
 /**
  * @author John Sullivan
@@ -172,6 +174,18 @@ class ChildParentCosineDistance[Vars <: NodeVariables[Vars]](weight:Double, shif
   }
 }
 
+class ChildParentPersonNameTemplate[Vars <: NodeVariables[Vars]](weight:Double, shift:Double, getName:(Vars => PersonNameVariable), scoreNames:((PersonName, PersonName) => Double), varName:String = "")(implicit c:ClassTag[Vars], p:Parameters) extends ChildParentTemplate[Vars](Tensor1(weight)) with DebuggableTemplate {
+  def name = "ChildParentPersonName: %s".format(varName)
+
+  override def statistics(v1: (Node[Vars], Node[Vars]), child: Vars, parent: Vars) = {
+    val childName = getName(child)
+    val parentName = getName(parent)
+    val v = scoreNames(childName.value, parentName.--(childName)(null).value) // at this point the child bag has been added to the parent and needs to be remove for regular comparison
+    report(v, initWeights(0))
+    Tensor1(v)
+  }
+}
+
 /**
  * This feature serves to ensure that certain merges are forbidden. Specifically no two nodes that share the same value
  * in the [[BagOfWordsVariable]] should be permitted to merge. Together with [[IdentityFactor]] it can create uniquely
@@ -225,7 +239,7 @@ class IdentityFactor[Vars <: NodeVariables[Vars]](getBag:(Vars => BagOfWordsVari
     val parentBag = getBag(parent)
     var result = 0.0
     if(childBag.value.asHashMap.exists{case (id, _) => parentBag.value.asHashMap.contains(id)}) {
-      result = 999999.0
+      result = 9999999.0
     } else {
       result = 0.0
     }
@@ -233,3 +247,84 @@ class IdentityFactor[Vars <: NodeVariables[Vars]](getBag:(Vars => BagOfWordsVari
     result
   }
 }
+
+
+class ChildParentDistanceFactor[Vars <: NodeVariables[Vars]](weight:Double, shift:Double, getBag:(Vars => BagOfWordsVariable), distance:((BagOfWordsVariable, BagOfWordsVariable) => Double), metricName:String = "", elementName:String = "")(implicit ct:ClassTag[Vars], p:Parameters)
+  extends ChildParentTemplate[Vars](Tensor1(weight))
+  with DebuggableTemplate {
+
+  val name = "ChildParentDistance: %s-%s".format(metricName, elementName)
+
+  override def statistics(v1: (Node[Vars], Node[Vars]), child: Vars, parent: Vars) = {
+    val childBag = getBag(child)
+    val parentBag = getBag(parent).--(childBag)(null)
+    //println("child: %s parent: %s distance: %.4f".format(childBag, parentBag, distance(childBag, parentBag)))
+    Tensor1(distance(childBag, parentBag) + shift)
+  }
+}
+
+class ChildParentStringDistance[Vars <: NodeVariables[Vars]](weight:Double, shift:Double, getBag:(Vars => BagOfWordsVariable), elementName:String)(implicit ct:ClassTag[Vars], p:Parameters) extends ChildParentDistanceFactor[Vars](weight, shift, getBag, {(x:BagOfWordsVariable, y:BagOfWordsVariable) => strings.editDistance(x.value.longest,y.value.longest)}, "string edit distance", elementName)
+
+class DenseCosineDistance[Vars <: NodeVariables[Vars]](weight:Double, shift:Double, getArray:(Vars => DenseDoubleBagVariable), val name:String="")(implicit ct:ClassTag[Vars], params:Parameters) extends ChildParentTemplate[Vars](Tensor1(weight)) with DebuggableTemplate {
+  import VectorUtils._
+  override def statistics(v1: ArrowVariable[Node[Vars], Node[Vars]]#Value, child: Vars, parent: Vars) = {
+    val childArray = getArray(child).value
+    val parentArray = getArray(parent).value
+    val v = (childArray cosineSimilarityWithParent parentArray)+shift
+    report(v, initWeights(0))
+    Tensor1(v)
+  }
+}
+
+class DenseBagOfWordsEntropy[Vars <: NodeVariables[Vars]](initialWeight:Double, getArray:(Vars => DenseDoubleBagVariable), val name:String="")(implicit ct:ClassTag[Vars], params:Parameters)
+  extends Template2[Node[Vars]#Exists, Vars]
+  with DotFamily2[Node[Vars]#Exists, Vars]
+  with DebuggableTemplate {
+
+  def unroll1(v: Node[Vars]#Exists) = Factor(v, v.node.variables)
+  def unroll2(v: Vars) = Factor(v.node.existsVar, v)
+
+  import VectorUtils._
+
+  override def statistics(exists: Node[Vars]#Exists#Value, vars:Vars) = if(exists.booleanValue) {
+    val score = getArray(vars).value.normalizedEntropyForLogValues
+    report(score, t(0))
+    Tensor1(score)
+  } else {
+    report(0.0, t(0))
+    Tensor1(0.0)
+  }
+
+  private val t = Tensor1(initialWeight)
+  val _weights = params.Weights(t)
+  def weights = _weights
+
+}
+
+class DenseBagOfWordsSizePrior[Vars <: NodeVariables[Vars]](initialWeight:Double, getArray:(Vars => DenseDoubleBagVariable), val name:String)(implicit ct:ClassTag[Vars], params:Parameters)
+  extends Template3[Node[Vars]#Exists, Node[Vars]#IsRoot, Vars]
+  with DotFamily3[Node[Vars]#Exists, Node[Vars]#IsRoot, Vars]
+  with DebuggableTemplate {
+
+  import VectorUtils._
+  override def statistics(exists: Node[Vars]#Exists#Value, isRoot: Node[Vars]#IsRoot#Value, vars: Vars) = if(exists.booleanValue && isRoot.booleanValue) {
+    val arr = getArray(vars).value
+    val score = if(arr.length > 0) arr.length / arr.oneNorm else 0.0
+    report(score, t(0))
+    Tensor1(score)
+  } else {
+    report(0.0, t(0))
+    Tensor1(0.0)
+  }
+
+  private val t = Tensor1(initialWeight)
+  val _weights = params.Weights(t)
+
+  def weights = _weights
+
+  def unroll1(exists: Node[Vars]#Exists) = Factor(exists, exists.node.isRootVar, exists.node.variables)
+  def unroll2(isRoot: Node[Vars]#IsRoot) = Factor(isRoot.node.existsVar, isRoot, isRoot.node.variables)
+  def unroll3(vars: Vars) = Factor(vars.node.existsVar, vars.node.isRootVar, vars)
+
+}
+
